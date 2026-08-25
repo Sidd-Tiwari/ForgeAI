@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import dev.forgeai.gateway.domain.Models.*;
+import dev.forgeai.gateway.resilience.RateLimitExceededException;
 import dev.forgeai.gateway.security.ApiAuthenticationFilter;
 import dev.forgeai.gateway.service.GatewayService;
 import java.math.BigDecimal;
@@ -111,5 +112,22 @@ class GatewayControllerTest {
             body ->
                 org.assertj.core.api.Assertions.assertThat(body)
                     .doesNotContain("sk-secret-provider-detail"));
+  }
+
+  @Test
+  void generateReturnsTooManyRequestsWhenTenantLimitIsExceeded() {
+    when(service.generate(anyString(), anyString(), any(), any()))
+        .thenReturn(Mono.error(new RateLimitExceededException()));
+    client
+        .post()
+        .uri("/v1/generate")
+        .header("Authorization", "Bearer test-token")
+        .header("X-Tenant-Id", "tenant-a")
+        .contentType(MediaType.APPLICATION_JSON)
+        .bodyValue(
+            "{\"model\":\"gpt-test\",\"messages\":[{\"role\":\"user\",\"content\":\"review\"}]}")
+        .exchange()
+        .expectStatus()
+        .isEqualTo(429);
   }
 }

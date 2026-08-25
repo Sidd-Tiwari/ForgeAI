@@ -1,0 +1,24 @@
+services:
+  mock-provider:
+    build: {context: ./verification/mock-provider}
+    networks: [backend]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9000/healthz', timeout=2)"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+  gateway:
+    environment:
+      OPENAI_BASE_URL: http://mock-provider:9000/v1/
+      ANTHROPIC_BASE_URL: http://mock-provider:9000/v1/
+      GEMINI_BASE_URL: http://mock-provider:9000/v1beta/
+      GATEWAY_REQUESTS_PER_MINUTE: 3
+      GATEWAY_MAX_RETRIES: 1
+      GATEWAY_RETRY_BACKOFF: 10ms
+      GATEWAY_FALLBACK_ANTHROPIC_MODEL: claude-mock
+      ANTHROPIC_API_KEY: local-platform-key
+    depends_on:
+      mock-provider: {condition: service_healthy}

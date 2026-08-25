@@ -25,6 +25,17 @@ forgeai:
     openai-key: ${OPENAI_API_KEY:}
     anthropic-key: ${ANTHROPIC_API_KEY:}
     gemini-key: ${GEMINI_API_KEY:}
+    openai-url: ${OPENAI_BASE_URL:https://api.openai.com/v1/}
+    anthropic-url: ${ANTHROPIC_BASE_URL:https://api.anthropic.com/v1/}
+    gemini-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta/}
+  policy:
+    max-retries: ${GATEWAY_MAX_RETRIES:2}
+    retry-backoff: ${GATEWAY_RETRY_BACKOFF:200ms}
+    cache-ttl: ${GATEWAY_CACHE_TTL:10m}
+    requests-per-minute: ${GATEWAY_REQUESTS_PER_MINUTE:60}
+    fallback-openai-model: ${GATEWAY_FALLBACK_OPENAI_MODEL:}
+    fallback-anthropic-model: ${GATEWAY_FALLBACK_ANTHROPIC_MODEL:}
+    fallback-gemini-model: ${GATEWAY_FALLBACK_GEMINI_MODEL:}
 logging:
   level:
     org.springframework.web.reactive.function.client.ExchangeFunctions: WARN

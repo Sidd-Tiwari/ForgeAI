@@ -5,6 +5,8 @@ import dev.forgeai.gateway.domain.Models.*;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -64,8 +66,11 @@ public final class ProviderAdapters {
 
   @Component
   public static final class OpenAi extends Base {
-    public OpenAi(WebClient.Builder b) {
-      this(b, "https://api.openai.com/v1/", Duration.ofSeconds(45));
+    @Autowired
+    public OpenAi(
+        WebClient.Builder b,
+        @Value("${forgeai.providers.openai-url:https://api.openai.com/v1/}") String baseUrl) {
+      this(b, baseUrl, Duration.ofSeconds(45));
     }
 
     OpenAi(WebClient.Builder b, String baseUrl, Duration timeout) {
@@ -98,8 +103,11 @@ public final class ProviderAdapters {
 
   @Component
   public static final class Anthropic extends Base {
-    public Anthropic(WebClient.Builder b) {
-      this(b, "https://api.anthropic.com/v1/", Duration.ofSeconds(45));
+    @Autowired
+    public Anthropic(
+        WebClient.Builder b,
+        @Value("${forgeai.providers.anthropic-url:https://api.anthropic.com/v1/}") String baseUrl) {
+      this(b, baseUrl, Duration.ofSeconds(45));
     }
 
     Anthropic(WebClient.Builder b, String baseUrl, Duration timeout) {
@@ -139,8 +147,12 @@ public final class ProviderAdapters {
 
   @Component
   public static final class Gemini extends Base {
-    public Gemini(WebClient.Builder b) {
-      this(b, "https://generativelanguage.googleapis.com/v1beta/", Duration.ofSeconds(45));
+    @Autowired
+    public Gemini(
+        WebClient.Builder b,
+        @Value("${forgeai.providers.gemini-url:https://generativelanguage.googleapis.com/v1beta/}")
+            String baseUrl) {
+      this(b, baseUrl, Duration.ofSeconds(45));
     }
 
     Gemini(WebClient.Builder b, String baseUrl, Duration timeout) {

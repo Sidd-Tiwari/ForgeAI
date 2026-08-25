@@ -1,5 +1,6 @@
 package dev.forgeai.gateway.api;
 
+import dev.forgeai.gateway.resilience.RateLimitExceededException;
 import dev.forgeai.gateway.security.CredentialResolver.MissingCredentialException;
 import java.net.URI;
 import org.springframework.http.*;
@@ -9,6 +10,15 @@ import org.springframework.web.server.ServerWebInputException;
 
 @RestControllerAdvice
 public class ApiErrors {
+  @ExceptionHandler(RateLimitExceededException.class)
+  ResponseEntity<ProblemDetail> rateLimited(
+      RateLimitExceededException ex, ServerWebExchange exchange) {
+    var p = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
+    p.setTitle("Rate limit exceeded");
+    p.setInstance(URI.create(exchange.getRequest().getPath().value()));
+    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(p);
+  }
+
   @ExceptionHandler(ServerWebInputException.class)
   ResponseEntity<ProblemDetail> invalidInput(
       ServerWebInputException ex, ServerWebExchange exchange) {
