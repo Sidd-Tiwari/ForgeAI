@@ -5,5 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class ForgeAiGatewayApplication {
-    public static void main(String[] args) { SpringApplication.run(ForgeAiGatewayApplication.class, args); }
+  public static void main(String[] args) {
+    SpringApplication.run(ForgeAiGatewayApplication.class, args);
+  }
 }
