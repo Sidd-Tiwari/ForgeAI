@@ -1,0 +1,14 @@
+.env
+*.log
+.idea/
+.vscode/
+target/
+__pycache__/
+.pytest_cache/
+.venv/
+dist/
+node_modules/
+coverage/
+.DS_Store
+reports/*.json
+!reports/.gitkeep

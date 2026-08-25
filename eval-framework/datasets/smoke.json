@@ -1,0 +1,4 @@
+[
+  {"id":"auth-bypass","expected":[{"id":"missing-authz","severity":"CRITICAL"}],"actual":[{"id":"missing-authz","severity":"CRITICAL"}]},
+  {"id":"sql-injection","expected":[{"id":"unsafe-query","severity":"HIGH"}],"actual":[{"id":"unsafe-query","severity":"HIGH"}]}
+]

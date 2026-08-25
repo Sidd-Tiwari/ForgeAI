@@ -1,0 +1,18 @@
+groups:
+  - name: forgeai-slos
+    rules:
+      - alert: GatewayHighErrorRate
+        expr: sum(rate(gateway_provider_failures_total[5m])) / clamp_min(sum(rate(gateway_requests_total[5m])), 0.001) > 0.05
+        for: 10m
+        labels: {severity: page}
+        annotations: {summary: "Gateway provider error rate exceeds 5%", runbook: "docs/runbooks/provider-outage.md"}
+      - alert: GatewayP95Latency
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{uri="/v1/generate"}[5m]))) > 2.5
+        for: 15m
+        labels: {severity: ticket}
+        annotations: {summary: "Gateway p95 exceeds the 2.5s SLO"}
+      - alert: AutoPRReviewFailures
+        expr: sum(rate(autopr_reviews_total{status="failure"}[15m])) > 0.05
+        for: 15m
+        labels: {severity: ticket}
+        annotations: {summary: "AutoPR reviews are failing"}

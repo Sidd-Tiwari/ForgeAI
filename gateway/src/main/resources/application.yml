@@ -1,0 +1,40 @@
+spring:
+  application.name: forgeai-gateway
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/forgeai}
+    username: ${DATABASE_USERNAME:forgeai}
+    password: ${DATABASE_PASSWORD:forgeai}
+  jpa:
+    open-in-view: false
+    hibernate.ddl-auto: validate
+  data.redis.url: ${REDIS_URL:redis://localhost:6379}
+  jackson.default-property-inclusion: non_null
+server:
+  shutdown: graceful
+  error.include-message: never
+  forward-headers-strategy: framework
+management:
+  endpoints.web.exposure.include: health,info,prometheus
+  endpoint.health.probes.enabled: true
+  metrics.tags.application: forgeai-gateway
+forgeai:
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000}
+  demo-daily-quota: ${DEMO_DAILY_QUOTA:5}
+  internal-token: ${FORGEAI_INTERNAL_TOKEN:}
+  providers:
+    openai-key: ${OPENAI_API_KEY:}
+    anthropic-key: ${ANTHROPIC_API_KEY:}
+    gemini-key: ${GEMINI_API_KEY:}
+logging:
+  level:
+    org.springframework.web.reactive.function.client.ExchangeFunctions: WARN
+    reactor.netty.http.client: WARN
+resilience4j:
+  circuitbreaker.instances.provider:
+    sliding-window-size: 20
+    minimum-number-of-calls: 5
+    failure-rate-threshold: 50
+    wait-duration-in-open-state: 30s
+  retry.instances.provider:
+    max-attempts: 2
+    wait-duration: 250ms

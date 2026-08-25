@@ -1,0 +1,82 @@
+name: forgeai
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-forgeai}
+      POSTGRES_USER: ${POSTGRES_USER:-forgeai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    command: [redis-server, --appendonly, "yes", --maxmemory-policy, allkeys-lru]
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+    restart: unless-stopped
+
+  gateway:
+    build: {context: ./gateway}
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/forgeai}
+      DATABASE_USERNAME: ${POSTGRES_USER:-forgeai}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080}
+      DEMO_DAILY_QUOTA: ${DEMO_DAILY_QUOTA:-5}
+      FORGEAI_INTERNAL_TOKEN: ${FORGEAI_INTERNAL_TOKEN:?set FORGEAI_INTERNAL_TOKEN in .env}
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    ports: ["8080:8080"]
+    networks: [backend, edge]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+
+  autopr:
+    build: {context: ./autopr}
+    environment:
+      GATEWAY_URL: http://gateway:8080
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:?set GITHUB_WEBHOOK_SECRET in .env}
+      FORGEAI_INTERNAL_TOKEN: ${FORGEAI_INTERNAL_TOKEN:?set FORGEAI_INTERNAL_TOKEN in .env}
+    depends_on: [gateway]
+    ports: ["8000:8000"]
+    networks: [backend, edge]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+
+  dashboard:
+    build: {context: ./dashboard}
+    ports: ["3000:8080"]
+    networks: [edge]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+
+networks:
+  backend: {internal: true}
+  edge: {}
+volumes:
+  postgres-data: {}
+  redis-data: {}

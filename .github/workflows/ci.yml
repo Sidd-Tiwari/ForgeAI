@@ -1,0 +1,34 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  gateway:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: "21", cache: maven}
+      - run: mvn -B verify
+        working-directory: gateway
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -e './eval-framework[dev]' -e './autopr[dev]'
+      - run: ruff check autopr eval-framework && pytest -q autopr/tests eval-framework/tests
+  containers:
+    runs-on: ubuntu-latest
+    needs: [gateway, python]
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config
+        env:
+          POSTGRES_PASSWORD: ci-only
+          GITHUB_WEBHOOK_SECRET: ci-only-secret
+          FORGEAI_INTERNAL_TOKEN: ci-only-token
