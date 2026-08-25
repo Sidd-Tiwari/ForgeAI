@@ -1,4 +1,38 @@
 [
-  {"id":"auth-bypass","expected":[{"id":"missing-authz","severity":"CRITICAL"}],"actual":[{"id":"missing-authz","severity":"CRITICAL"}]},
-  {"id":"sql-injection","expected":[{"id":"unsafe-query","severity":"HIGH"}],"actual":[{"id":"unsafe-query","severity":"HIGH"}]}
+  {
+    "id": "auth-bypass",
+    "expected": [{"id": "missing-authz", "severity": "CRITICAL"}],
+    "actual": [{"id": "missing-authz", "severity": "CRITICAL"}]
+  },
+  {
+    "id": "sql-injection",
+    "expected": [{"id": "unsafe-query", "severity": "HIGH"}],
+    "actual": [{"id": "unsafe-query", "severity": "HIGH"}]
+  },
+  {
+    "id": "webhook-signature",
+    "expected": [{"id": "unsigned-webhook", "severity": "CRITICAL"}],
+    "actual": [{"id": "unsigned-webhook", "severity": "CRITICAL"}]
+  },
+  {
+    "id": "cross-tenant-cache",
+    "expected": [
+      {"id": "tenant-missing-cache-key", "severity": "CRITICAL"},
+      {"id": "unbounded-cache-ttl", "severity": "MEDIUM"}
+    ],
+    "actual": [
+      {"id": "tenant-missing-cache-key", "severity": "CRITICAL"},
+      {"id": "unbounded-cache-ttl", "severity": "MEDIUM"}
+    ]
+  },
+  {
+    "id": "provider-timeout",
+    "expected": [{"id": "missing-timeout", "severity": "HIGH"}],
+    "actual": [{"id": "missing-timeout", "severity": "HIGH"}]
+  },
+  {
+    "id": "safe-validation-change",
+    "expected": [],
+    "actual": []
+  }
 ]

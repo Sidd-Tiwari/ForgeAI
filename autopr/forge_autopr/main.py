@@ -1,6 +1,8 @@
 import json
+
 from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request, Response
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+
 from .config import Settings
 from .github import GitHubClient
 from .reviewer import Reviewer
@@ -32,7 +34,10 @@ async def webhook(request: Request, tasks: BackgroundTasks, x_hub_signature_256:
     body = await request.body()
     if not verify_signature(settings.github_webhook_secret, body, x_hub_signature_256):
         raise HTTPException(401, "Invalid webhook signature")
-    payload = json.loads(body)
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError as exc:
+        raise HTTPException(400, "Malformed webhook JSON") from exc
     if x_github_event == "pull_request" and payload.get("action") in {"opened", "synchronize", "reopened"}:
         tasks.add_task(process, payload)
     return {"accepted": True}

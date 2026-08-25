@@ -43,6 +43,12 @@ services:
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://localhost:8080/actuator/health/readiness]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     ports: ["8080:8080"]
     networks: [backend, edge]
     read_only: true
@@ -57,7 +63,14 @@ services:
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:?set GITHUB_WEBHOOK_SECRET in .env}
       FORGEAI_INTERNAL_TOKEN: ${FORGEAI_INTERNAL_TOKEN:?set FORGEAI_INTERNAL_TOKEN in .env}
-    depends_on: [gateway]
+    depends_on:
+      gateway: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
     ports: ["8000:8000"]
     networks: [backend, edge]
     read_only: true
@@ -69,6 +82,12 @@ services:
     build: {context: ./dashboard}
     ports: ["3000:8080"]
     networks: [edge]
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:8080/]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
     read_only: true
     tmpfs: [/tmp]
     security_opt: [no-new-privileges:true]

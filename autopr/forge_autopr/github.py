@@ -1,5 +1,6 @@
 import httpx
 
+
 class GitHubClient:
     def __init__(self, token: str):
         self.client = httpx.AsyncClient(base_url="https://api.github.com", headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}, timeout=30)

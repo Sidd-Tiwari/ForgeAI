@@ -1,5 +1,6 @@
 from forge_eval import evaluate
 
+
 def test_perfect_review():
     result=evaluate({"id":"one","expected":[{"id":"bug","severity":"HIGH"}],"actual":[{"id":"bug","severity":"HIGH"}]})
     assert result.score == 1

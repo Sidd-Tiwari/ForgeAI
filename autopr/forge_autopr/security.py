@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 
+
 def verify_signature(secret: str, body: bytes, signature: str | None) -> bool:
     if not signature or not signature.startswith("sha256="):
         return False

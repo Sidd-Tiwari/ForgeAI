@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+
 class Finding(BaseModel):
     id: str
     severity: str

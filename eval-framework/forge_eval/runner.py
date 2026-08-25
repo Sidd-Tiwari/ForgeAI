@@ -1,5 +1,6 @@
 from .models import Case, Result
 
+
 def evaluate(case: Case | dict) -> Result:
     case = case if isinstance(case, Case) else Case.model_validate(case)
     expected = {f.id: f for f in case.expected}; actual = {f.id: f for f in case.actual}

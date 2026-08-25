@@ -1,10 +1,16 @@
 import json
 from pathlib import Path
+
 import typer
 from rich.console import Console
+
 from .runner import evaluate
 
 app=typer.Typer(help="Run deterministic ForgeAI review evaluations.")
+
+@app.callback()
+def main() -> None:
+    """Evaluate AI review findings against labeled datasets."""
 
 @app.command()
 def run(dataset: Path, minimum_score: float=typer.Option(0.75, min=0, max=1), output: Path|None=None) -> None:
