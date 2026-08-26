@@ -18,10 +18,78 @@ $artifactRoot = (Resolve-Path -LiteralPath $ArtifactDirectory).Path
 $services = @("gateway", "autopr")
 $releaseImages = @()
 
+function Export-Attestations {
+    param(
+        [string]$OciArchive,
+        [string]$SpdxDestination,
+        [string]$ProvenanceDestination
+    )
+
+    $extractRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("forgeai-attestation-" + [guid]::NewGuid())
+    $null = New-Item -ItemType Directory -Path $extractRoot
+    try {
+        & tar -xf $OciArchive -C $extractRoot
+        if ($LASTEXITCODE -ne 0) {
+            throw "Unable to extract OCI attestation archive"
+        }
+        $rootIndex = Get-Content -Raw -LiteralPath (Join-Path $extractRoot "index.json") | ConvertFrom-Json
+        $pending = New-Object System.Collections.Queue
+        foreach ($descriptor in $rootIndex.manifests) {
+            $pending.Enqueue($descriptor)
+        }
+        $foundSpdx = $false
+        $foundProvenance = $false
+        while ($pending.Count -gt 0) {
+            $descriptor = $pending.Dequeue()
+            $documentDigest = $descriptor.digest.Split(":", 2)[1]
+            $documentPath = Join-Path $extractRoot "blobs/sha256/${documentDigest}"
+            $document = Get-Content -Raw -LiteralPath $documentPath | ConvertFrom-Json
+            if ($document.manifests) {
+                foreach ($nestedDescriptor in $document.manifests) {
+                    $pending.Enqueue($nestedDescriptor)
+                }
+                continue
+            }
+            if ($descriptor.annotations.'vnd.docker.reference.type' -ne "attestation-manifest") {
+                continue
+            }
+            $manifest = $document
+            foreach ($layer in $manifest.layers) {
+                $layerDigest = $layer.digest.Split(":", 2)[1]
+                $statementPath = Join-Path $extractRoot "blobs/sha256/${layerDigest}"
+                $statement = Get-Content -Raw -LiteralPath $statementPath | ConvertFrom-Json
+                if ($statement.predicateType -match "spdx") {
+                    $statement.predicate |
+                        ConvertTo-Json -Depth 100 |
+                        Set-Content -Encoding UTF8 -LiteralPath $SpdxDestination
+                    $foundSpdx = $true
+                }
+                if ($statement.predicateType -match "slsa.dev/provenance") {
+                    $statement |
+                        ConvertTo-Json -Depth 100 |
+                        Set-Content -Encoding UTF8 -LiteralPath $ProvenanceDestination
+                    $foundProvenance = $true
+                }
+            }
+        }
+        if (-not $foundSpdx) {
+            throw "BuildKit did not emit an SPDX SBOM attestation"
+        }
+        if (-not $foundProvenance) {
+            throw "BuildKit did not emit a SLSA provenance attestation"
+        }
+    }
+    finally {
+        Remove-Item -Recurse -Force -LiteralPath $extractRoot
+    }
+}
+
 foreach ($service in $services) {
     $image = "forgeai-${service}:git-${Tag}"
     $metadataPath = Join-Path $artifactRoot "${service}-build-metadata.json"
-    $sbomPath = Join-Path $artifactRoot "${service}.cdx.json"
+    $sbomPath = Join-Path $artifactRoot "${service}.spdx.json"
+    $provenancePath = Join-Path $artifactRoot "${service}-provenance.intoto.json"
+    $ociArchive = Join-Path $artifactRoot "${service}-attested.oci.tar"
 
     & docker buildx build `
         --load `
@@ -34,10 +102,19 @@ foreach ($service in $services) {
         throw "Build failed for ${service}"
     }
 
-    & docker scout sbom --format cyclonedx --output $sbomPath "local://${image}"
+    & docker buildx build `
+        --provenance=mode=max `
+        --sbom=true `
+        --output "type=oci,dest=${ociArchive}" `
+        $service
     if ($LASTEXITCODE -ne 0) {
-        throw "SBOM generation failed for ${service}"
+        throw "OCI attestation export failed for ${service}"
     }
+    Export-Attestations `
+        -OciArchive $ociArchive `
+        -SpdxDestination $sbomPath `
+        -ProvenanceDestination $provenancePath
+    Remove-Item -Force -LiteralPath $ociArchive
 
     $inspect = docker image inspect $image | ConvertFrom-Json
     $metadata = Get-Content -Raw -LiteralPath $metadataPath | ConvertFrom-Json
@@ -59,7 +136,8 @@ foreach ($service in $services) {
         image_id = $inspect[0].Id
         build_digest = $metadata.'containerimage.digest'
         sbom = $sbomPath
-        provenance = $metadataPath
+        provenance = $provenancePath
+        build_metadata = $metadataPath
     }
 }
 
