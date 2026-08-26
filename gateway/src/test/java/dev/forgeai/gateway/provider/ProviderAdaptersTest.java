@@ -37,7 +37,7 @@ class ProviderAdaptersTest {
                 {"choices":[{"message":{"content":"openai answer"}}],
                  "usage":{"prompt_tokens":11,"completion_tokens":7}}
                 """);
-    var adapter = new ProviderAdapters.OpenAi(builder(), baseUrl(), Duration.ofSeconds(1));
+    var adapter = new ProviderAdapters.OpenAi(builder(), baseUrl(), Duration.ofSeconds(5));
 
     StepVerifier.create(
             adapter.generate(request(Provider.OPENAI, "gpt-test"), "openai-secret".toCharArray()))
@@ -65,7 +65,7 @@ class ProviderAdaptersTest {
   void openAiSurfacesRateLimit() {
     enqueueJson(429, "{\"error\":{\"message\":\"rate limited\"}}");
     assertRateLimit(
-        new ProviderAdapters.OpenAi(builder(), baseUrl(), Duration.ofSeconds(1)),
+        new ProviderAdapters.OpenAi(builder(), baseUrl(), Duration.ofSeconds(5)),
         request(Provider.OPENAI, "gpt-test"));
   }
 
@@ -73,7 +73,7 @@ class ProviderAdaptersTest {
   void openAiRejectsMalformedResponse() {
     enqueueJson(200, "{}");
     assertMalformed(
-        new ProviderAdapters.OpenAi(builder(), baseUrl(), Duration.ofSeconds(1)),
+        new ProviderAdapters.OpenAi(builder(), baseUrl(), Duration.ofSeconds(5)),
         request(Provider.OPENAI, "gpt-test"));
   }
 
@@ -85,7 +85,7 @@ class ProviderAdaptersTest {
                 {"content":[{"text":"anthropic answer"}],
                  "usage":{"input_tokens":13,"output_tokens":9}}
                 """);
-    var adapter = new ProviderAdapters.Anthropic(builder(), baseUrl(), Duration.ofSeconds(1));
+    var adapter = new ProviderAdapters.Anthropic(builder(), baseUrl(), Duration.ofSeconds(5));
 
     StepVerifier.create(
             adapter.generate(
@@ -115,7 +115,7 @@ class ProviderAdaptersTest {
   void anthropicSurfacesRateLimit() {
     enqueueJson(429, "{\"error\":{\"message\":\"rate limited\"}}");
     assertRateLimit(
-        new ProviderAdapters.Anthropic(builder(), baseUrl(), Duration.ofSeconds(1)),
+        new ProviderAdapters.Anthropic(builder(), baseUrl(), Duration.ofSeconds(5)),
         request(Provider.ANTHROPIC, "claude-test"));
   }
 
@@ -123,7 +123,7 @@ class ProviderAdaptersTest {
   void anthropicRejectsMalformedResponse() {
     enqueueJson(200, "{}");
     assertMalformed(
-        new ProviderAdapters.Anthropic(builder(), baseUrl(), Duration.ofSeconds(1)),
+        new ProviderAdapters.Anthropic(builder(), baseUrl(), Duration.ofSeconds(5)),
         request(Provider.ANTHROPIC, "claude-test"));
   }
 
@@ -135,7 +135,7 @@ class ProviderAdaptersTest {
                 {"candidates":[{"content":{"parts":[{"text":"gemini answer"}]}}],
                  "usageMetadata":{"promptTokenCount":17,"candidatesTokenCount":6}}
                 """);
-    var adapter = new ProviderAdapters.Gemini(builder(), baseUrl(), Duration.ofSeconds(1));
+    var adapter = new ProviderAdapters.Gemini(builder(), baseUrl(), Duration.ofSeconds(5));
 
     StepVerifier.create(
             adapter.generate(
@@ -164,7 +164,7 @@ class ProviderAdaptersTest {
   void geminiSurfacesRateLimit() {
     enqueueJson(429, "{\"error\":{\"message\":\"rate limited\"}}");
     assertRateLimit(
-        new ProviderAdapters.Gemini(builder(), baseUrl(), Duration.ofSeconds(1)),
+        new ProviderAdapters.Gemini(builder(), baseUrl(), Duration.ofSeconds(5)),
         request(Provider.GEMINI, "gemini-test"));
   }
 
@@ -172,7 +172,7 @@ class ProviderAdaptersTest {
   void geminiRejectsMalformedResponse() {
     enqueueJson(200, "{}");
     assertMalformed(
-        new ProviderAdapters.Gemini(builder(), baseUrl(), Duration.ofSeconds(1)),
+        new ProviderAdapters.Gemini(builder(), baseUrl(), Duration.ofSeconds(5)),
         request(Provider.GEMINI, "gemini-test"));
   }
 
