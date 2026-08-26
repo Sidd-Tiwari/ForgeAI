@@ -1,0 +1,32 @@
+﻿[
+    {
+        "service":  "gateway",
+        "tag":  "forgeai-gateway:git-f093f1f90069",
+        "immutable_ref":  "forgeai-gateway@sha256:b251ac6f03384ffa290e05e79cf659cd1bb98a70a28bc00ea9e822b293387be0",
+        "image_id":  "sha256:b251ac6f03384ffa290e05e79cf659cd1bb98a70a28bc00ea9e822b293387be0",
+        "build_digest":  "sha256:b251ac6f03384ffa290e05e79cf659cd1bb98a70a28bc00ea9e822b293387be0",
+        "sbom":  "D:\\ForgeAI\\verification\\artifacts\\gateway.spdx.json",
+        "provenance":  "D:\\ForgeAI\\verification\\artifacts\\gateway-provenance.intoto.json",
+        "build_metadata":  "D:\\ForgeAI\\verification\\artifacts\\gateway-build-metadata.json"
+    },
+    {
+        "service":  "autopr",
+        "tag":  "forgeai-autopr:git-f093f1f90069",
+        "immutable_ref":  "forgeai-autopr@sha256:66472511d73a44a96e16b078c2b4251e96a39e1b710c9fd37455ecf45c66ac16",
+        "image_id":  "sha256:66472511d73a44a96e16b078c2b4251e96a39e1b710c9fd37455ecf45c66ac16",
+        "build_digest":  "sha256:66472511d73a44a96e16b078c2b4251e96a39e1b710c9fd37455ecf45c66ac16",
+        "sbom":  "D:\\ForgeAI\\verification\\artifacts\\autopr.spdx.json",
+        "provenance":  "D:\\ForgeAI\\verification\\artifacts\\autopr-provenance.intoto.json",
+        "build_metadata":  "D:\\ForgeAI\\verification\\artifacts\\autopr-build-metadata.json"
+    },
+    {
+        "service":  "dashboard",
+        "tag":  "forgeai-dashboard:git-f093f1f90069",
+        "immutable_ref":  "forgeai-dashboard@sha256:e3a592c0b719500ff5675283688af378e9acc1e04640d4c198742dc64957628b",
+        "image_id":  "sha256:e3a592c0b719500ff5675283688af378e9acc1e04640d4c198742dc64957628b",
+        "build_digest":  "sha256:e3a592c0b719500ff5675283688af378e9acc1e04640d4c198742dc64957628b",
+        "sbom":  "D:\\ForgeAI\\verification\\artifacts\\dashboard.spdx.json",
+        "provenance":  "D:\\ForgeAI\\verification\\artifacts\\dashboard-provenance.intoto.json",
+        "build_metadata":  "D:\\ForgeAI\\verification\\artifacts\\dashboard-build-metadata.json"
+    }
+]

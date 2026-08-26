@@ -11,13 +11,21 @@ ForgeAI is a production-oriented AI engineering platform. Its core is a multi-pr
 
 > **Readiness statement:** this is a deployable vertical slice, not a production-certification claim. Local verification covers adapter contracts, request-scoped BYOK handling with non-production keys, PostgreSQL usage entries, retry and mapped cross-provider fallback, tenant-private exact caching, per-tenant fixed-window limits, webhook signature rejection, deterministic evaluation, SPDX image SBOMs, SLSA provenance attestations, immutable local image references, and syntax-checked provisional alerts. Real commercial-provider calls, a real GitHub review, live-review evaluation, hosted access-log/APM redaction, and execution of the GitHub release workflow remain unverified until credentials and external test infrastructure are supplied.
 
-## Verified product preview
+## Proof of Work
 
-[![ForgeAI local Gateway verification dashboard](docs/images/forgeai-dashboard-verification.png)](docs/images/forgeai-dashboard-verification.png)
+[![ForgeAI mock end-to-end verification dashboard](verification/artifacts/verify-everything-dashboard.png)](verification/artifacts/verify-everything-dashboard.png)
 
-*Click the screenshot to open the full-resolution verification view. It shows the local mock-provider workflow completing successfully, request-scoped BYOK attribution, and the resulting usage-ledger entry without using production provider credentials.*
+*The captured local mock run shows request-scoped BYOK attribution, the first successful provider response, two cache hits, a user-facing fourth-request rate limit (HTTP 429), and the matching usage-ledger rows. No production provider credential was used.*
 
-[Open the responsive mobile verification capture](docs/images/forgeai-dashboard-mobile.png)
+| Verification evidence | Public artifact |
+|---|---|
+| Commit-pinned release inventory | [`release-manifest.json`](verification/artifacts/release-manifest.json) |
+| Gateway software bill of materials | [`gateway.spdx.json`](verification/artifacts/gateway.spdx.json) |
+| AutoPR software bill of materials | [`autopr.spdx.json`](verification/artifacts/autopr.spdx.json) |
+| Dashboard software bill of materials | [`dashboard.spdx.json`](verification/artifacts/dashboard.spdx.json) |
+| Docker Scout critical/high scan | [Gateway, AutoPR, and Dashboard scan transcript](verification/docker-scout-f093f1f90069.md): **0 critical / 0 high** for the images pinned to `f093f1f90069` |
+
+Additional responsive views: [desktop](docs/images/forgeai-dashboard-verification.png) · [mobile](docs/images/forgeai-dashboard-mobile.png)
 
 ## The engineering story
 
@@ -144,7 +152,7 @@ Detailed C4 and level-0/level-1 DFDs are in [architecture.md](docs/architecture/
 
 ## CI/CD, containers, and monitoring
 
-The checked-in workflows are configured so pull requests compile/test Java, lint/test both Python packages, validate Compose configuration, and scan the filesystem with Trivy. The tag workflow is configured to build non-root images, request provenance/SBOM attestations, and publish immutable tags to GHCR. Local release verification uses `verification/release/build-artifacts.ps1` to emit SPDX SBOMs, in-toto/SLSA provenance, BuildKit metadata, commit-tagged images, and digest-pinned references under the ignored `verification/artifacts` directory. These GitHub workflow definitions have not been executed because no remote is configured. The `production` job remains an explicit deployment-adapter placeholder.
+The checked-in workflows are configured so pull requests compile/test Java, lint/test both Python packages, validate Compose configuration, and scan the filesystem with Trivy. The tag workflow is configured to build non-root images, request provenance/SBOM attestations, and publish immutable tags to GHCR. Local release verification uses `verification/release/build-artifacts.ps1` to emit SPDX SBOMs, in-toto/SLSA provenance, BuildKit metadata, commit-tagged images, and digest-pinned references under `verification/artifacts`. Generated working files stay ignored; the manifest, three image SBOMs, and final verification screenshot linked above are deliberately tracked as public evidence. These GitHub workflow definitions have not been executed because no remote is configured. The `production` job remains an explicit deployment-adapter placeholder.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File verification/release/build-artifacts.ps1
@@ -177,9 +185,12 @@ Local services expose low-cardinality Micrometer/Prometheus series. Syntax-check
 
 “I built the infrastructure around AI applications: a tenant-aware multi-provider Gateway with BYOK economics and auditable cost ownership; a PR-review workflow designed to use that control plane; and an evaluation package that turns AI quality into a repeatable CI signal. Local tests prove the control boundaries; live provider and GitHub certification are the next external verification gates.”
 
-## About the engineer
+## Author
 
-**Siddharth Tiwari** is a software engineer focused on Java and Spring Boot, microservices, distributed systems, system design, REST APIs, and production-minded Generative AI and LLM integration. ForgeAI demonstrates this focus through secure multi-provider orchestration, auditable usage accounting, automated code review, deterministic evaluation, containerized delivery, and operational verification.
+**Siddharth Tiwari**<br>
+Software Engineer | Java & Spring Boot | Microservices | Distributed Systems | System Design | REST APIs | Generative AI & LLM Integration
+
+[Portfolio](https://siddharth-tiwari.vercel.app/) · [GitHub](https://github.com/Sidd-Tiwari) · [LinkedIn](https://www.linkedin.com/in/siddharth-tiwari-394451271/) · [LeetCode](https://leetcode.com/u/Sidd-Tiwari/)
 
 ## License
 

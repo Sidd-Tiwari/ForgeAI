@@ -1,5 +1,10 @@
 .env
-verification/artifacts/
+verification/artifacts/*
+!verification/artifacts/verify-everything-dashboard.png
+!verification/artifacts/release-manifest.json
+!verification/artifacts/gateway.spdx.json
+!verification/artifacts/autopr.spdx.json
+!verification/artifacts/dashboard.spdx.json
 *.log
 .idea/
 .vscode/
