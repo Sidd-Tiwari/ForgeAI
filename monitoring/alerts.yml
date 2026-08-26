@@ -5,14 +5,19 @@ groups:
         expr: sum(rate(gateway_provider_failures_total[5m])) / clamp_min(sum(rate(gateway_requests_total[5m])), 0.001) > 0.05
         for: 10m
         labels: {severity: page}
-        annotations: {summary: "Gateway provider error rate exceeds 5%", runbook: "docs/runbooks/provider-outage.md"}
+        annotations: {summary: "Gateway provider error rate exceeds provisional 5% threshold", evidence: "No production traffic baseline; recalibration required", runbook: "docs/runbooks/provider-outage.md"}
       - alert: GatewayP95Latency
-        expr: histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{uri="/v1/generate"}[5m]))) > 2.5
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{uri="/v1/generate"}[5m]))) > 0.375
         for: 15m
         labels: {severity: ticket}
-        annotations: {summary: "Gateway p95 exceeds the 2.5s SLO"}
+        annotations: {summary: "Gateway p95 exceeds provisional 375ms local baseline objective", evidence: "250ms observed provider path plus 50% margin"}
+      - alert: GatewayCacheHitRateLow
+        expr: (sum(rate(gateway_cache_hits_total[15m])) / clamp_min(sum(rate(gateway_cache_hits_total[15m])) + sum(rate(gateway_cache_misses_total[15m])), 0.001) < 0.60) and (sum(increase(gateway_cache_hits_total[15m])) + sum(increase(gateway_cache_misses_total[15m])) >= 3)
+        for: 15m
+        labels: {severity: ticket}
+        annotations: {summary: "Exact-repeat cache hit rate is below provisional 60% objective", evidence: "2/3 hits observed in controlled repeated-request sample"}
       - alert: AutoPRReviewFailures
         expr: sum(rate(autopr_reviews_total{status="failure"}[15m])) > 0.05
         for: 15m
         labels: {severity: ticket}
-        annotations: {summary: "AutoPR reviews are failing"}
+        annotations: {summary: "AutoPR reviews are failing", evidence: "Provisional until live GitHub reviews are measured"}
