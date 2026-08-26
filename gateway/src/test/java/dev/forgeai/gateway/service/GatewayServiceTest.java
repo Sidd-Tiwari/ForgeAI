@@ -245,12 +245,19 @@ class GatewayServiceTest {
 
   @Test
   void crossProviderFallbackUsesConfiguredProviderModel() {
+    policy.setMaxRetries(1);
     policy.setFallbackAnthropicModel("claude-fallback");
+    var primarySubscriptions = new AtomicInteger();
     var openai = mock(LlmProvider.class);
     when(openai.id()).thenReturn(Provider.OPENAI);
     when(openai.supports("gpt-primary")).thenReturn(true);
     when(openai.generate(any(), any(char[].class)))
-        .thenReturn(Mono.error(new TimeoutException("forced timeout")));
+        .thenReturn(
+            Mono.defer(
+                () -> {
+                  primarySubscriptions.incrementAndGet();
+                  return Mono.error(new TimeoutException("forced timeout"));
+                }));
     var anthropic = mock(LlmProvider.class);
     when(anthropic.id()).thenReturn(Provider.ANTHROPIC);
     when(anthropic.supports("gpt-primary")).thenReturn(false);
@@ -274,6 +281,7 @@ class GatewayServiceTest {
     var fallbackRequest = ArgumentCaptor.forClass(GenerateRequest.class);
     verify(anthropic).generate(fallbackRequest.capture(), any(char[].class));
     assertThat(fallbackRequest.getValue().model()).isEqualTo("claude-fallback");
+    assertThat(primarySubscriptions).hasValue(2);
   }
 
   @Test

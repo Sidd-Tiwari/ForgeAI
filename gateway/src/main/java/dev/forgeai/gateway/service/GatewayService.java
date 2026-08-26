@@ -191,7 +191,8 @@ public class GatewayService {
                         "provider_retry provider={} attempt={} error={}",
                         provider,
                         signal.totalRetries() + 1,
-                        classify(signal.failure()))));
+                        classify(signal.failure())))
+            .onRetryExhaustedThrow((spec, signal) -> signal.failure()));
   }
 
   private Mono<Attempt> fallback(Provider selected, GenerateRequest request, Throwable original) {
