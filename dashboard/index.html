@@ -15,14 +15,25 @@
 
   <aside class='sidebar'>
     <div class='brand-block'>
-      <div class='brand'><span class='brand-mark'>F</span><span>ForgeAI</span></div>
+      <div class='brand'>
+        <span class='brand-mark' aria-hidden='true'><span>F</span><i></i></span>
+        <span class='brand-name'>Forge<span>AI</span></span>
+      </div>
       <p>AI control plane</p>
     </div>
 
     <nav aria-label='Primary navigation'>
       <a class='active' href='#gateway'><span class='nav-dot' aria-hidden='true'></span>Gateway</a>
-      <a href='#usage'><span class='nav-dot' aria-hidden='true'></span>Usage ledger</a>
+      <a href='#usage'><span class='nav-dot' aria-hidden='true'></span>Ledger</a>
+      <a href='#help'><span class='nav-dot' aria-hidden='true'></span>Help</a>
     </nav>
+
+    <button class='theme-toggle' id='theme-toggle' type='button' aria-label='Switch to light mode' aria-pressed='false'>
+      <span class='theme-icon' aria-hidden='true'>
+        <svg viewBox='0 0 24 24' focusable='false'><path d='M12 3v2m0 14v2M3 12h2m14 0h2M5.64 5.64l1.42 1.42m9.88 9.88 1.42 1.42M18.36 5.64l-1.42 1.42M7.06 16.94l-1.42 1.42'/><circle cx='12' cy='12' r='4'/></svg>
+      </span>
+      <span id='theme-label'>Light mode</span>
+    </button>
 
     <div class='sidebar-note'>
       <span>Verification workspace</span>
@@ -160,6 +171,44 @@
           </div>
         </div>
         <div id='ledger-error' class='result error' role='alert' hidden></div>
+      </article>
+
+      <article class='panel help-panel' id='help'>
+        <div class='panel-header'>
+          <div>
+            <span class='section-kicker'>GETTING STARTED</span>
+            <h2>New to ForgeAI?</h2>
+            <p>Complete your first safe, local verification in four short steps.</p>
+          </div>
+          <span class='help-badge'>NO LIVE KEYS</span>
+        </div>
+
+        <ol class='guide-grid'>
+          <li class='guide-step'>
+            <span class='step-number'>01</span>
+            <div><strong>Add the local token</strong><p>Paste the Gateway token from your local Compose environment. It authorizes this dashboard only.</p></div>
+          </li>
+          <li class='guide-step'>
+            <span class='step-number'>02</span>
+            <div><strong>Choose a scenario</strong><p>Select a tenant, mock provider, mock key behavior, and a ready-made prompt from the dropdowns.</p></div>
+          </li>
+          <li class='guide-step'>
+            <span class='step-number'>03</span>
+            <div><strong>Send the request</strong><p>Use Send mock request. The result area explains success, validation errors, or rate limits without raw stack traces.</p></div>
+          </li>
+          <li class='guide-step'>
+            <span class='step-number'>04</span>
+            <div><strong>Inspect the ledger</strong><p>Confirm provider, model, cache use, credential source, status, and latency in the usage table.</p></div>
+          </li>
+        </ol>
+
+        <div class='help-actions'>
+          <div class='help-callout'>
+            <span aria-hidden='true'>?</span>
+            <div><strong>Something not working?</strong><p>Confirm the local stack is healthy, then check the access token and selected tenant before retrying.</p></div>
+          </div>
+          <a class='start-link' href='#gateway'>Start guided request <span aria-hidden='true'>→</span></a>
+        </div>
       </article>
     </section>
 
