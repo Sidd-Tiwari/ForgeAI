@@ -5,7 +5,7 @@
 | 001 | Provider-neutral gateway ports and adapters | Accepted |
 | 002 | Request-scoped session BYOK; no persistent secrets | Accepted |
 | 003 | Mandatory tenant identity on every request | Accepted |
-| 004 | Tenant-private exact caching before semantic caching | Proposed |
+| 004 | Tenant-private exact caching before semantic caching | Accepted and implemented |
 | 005 | PostgreSQL authoritative synchronous usage ledger | Accepted |
 | 006 | Capability validation and policy-driven routing | Accepted |
 | 007 | Gateway-owned, versioned prompt registry | Proposed |

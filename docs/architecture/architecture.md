@@ -7,7 +7,7 @@ C4Container
   Person(user, "Developer", "Uses BYOK and reviews")
   System_Ext(github, "GitHub", "PRs, webhooks, reviews")
   System_Ext(llms, "LLM providers", "OpenAI, Anthropic, Gemini")
-  System_Ext(grafana, "Grafana Cloud", "Metrics, logs, alerts")
+  System_Ext(grafana, "Grafana Cloud (planned integration)", "Metrics, logs, alerts")
   System_Boundary(forge, "ForgeAI") {
     Container(ui, "Control plane", "HTML/CSS", "Operational views; never renders credentials")
     Container(auto, "AutoPR", "FastAPI", "Verifies events and orchestrates review")
@@ -23,7 +23,7 @@ C4Container
   Rel(gw, pg, "Ledger")
   Rel(gw, redis, "Limits/cache")
   Rel(auto, eval, "Review result")
-  Rel(gw, grafana, "Low-cardinality telemetry")
+  Rel(gw, grafana, "Planned low-cardinality telemetry export")
 ```
 
 ## DFD level 0
@@ -52,7 +52,7 @@ sequenceDiagram
   participant D as Ledger
   C->>G: JSON + X-Tenant-Id + optional X-Provider-Key
   G->>Q: quota(tenant, provider, model)
-  G->>R: explicit → tenant → platform → reject
+  G->>R: request BYOK, otherwise platform key, otherwise reject
   R-->>G: request-scoped char[] + ownership
   G->>P: normalized request + credential
   P-->>G: normalized result/usage
@@ -73,4 +73,4 @@ sequenceDiagram
 | Deterministic eval first | Reproducible CI gate | Blend calibrated judges after human-labeled validation |
 | Direct GitHub API | Narrow tool attack surface | Add MCP when multiple interchangeable tool hosts create value |
 
-Exact caching is planned but off by default until Redis integration and cross-tenant isolation tests are complete. Provider is part of cache identity because outputs and commercial terms differ; tenant is always part of private cache identity.
+Exact caching is enabled with a configurable TTL. Tenant, selected provider, and the canonical normalized request are hashed into the Redis identity; credentials are never cache inputs or values. Unit tests and a local Compose runtime check cover cross-tenant isolation. Semantic caching remains intentionally unimplemented.

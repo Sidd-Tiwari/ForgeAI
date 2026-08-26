@@ -4,9 +4,9 @@
 
 [![CI](https://img.shields.io/badge/CI-tested-34d399)](.github/workflows/ci.yml) [![Security](https://img.shields.io/badge/security-BYOK_isolated-8b5cf6)](SECURITY.md) [![Java](https://img.shields.io/badge/Java-21-ef4444)](gateway) [![Python](https://img.shields.io/badge/Python-3.12-38bdf8)](autopr)
 
-ForgeAI is a production-oriented AI engineering platform. Its core is a multi-provider Gateway that owns tenant identity, request-scoped BYOK credentials, routing, normalized provider calls, usage attribution, and operational telemetry. AutoPR consumes only that Gateway, then the reusable evaluation package measures whether its reviews are actually useful.
+ForgeAI is a production-oriented AI engineering platform. Its core is a multi-provider Gateway that owns tenant identity, request-scoped BYOK credentials, routing, normalized provider calls, usage attribution, and operational telemetry. AutoPR is implemented to consume only that Gateway, then the reusable evaluation package measures review quality.
 
-> **Readiness statement:** the repository is a deployable vertical slice, not a claim that an unoperated demo is production-certified. Session-only BYOK, provider adapters, durable ledger, webhook validation, deterministic quality gates, hardened containers, CI/security scans, metrics, alerts, and runbooks are implemented. Distributed quotas, exact/semantic cache, encrypted account credentials, full fallback policy, prompt experiments, and calibrated LLM judging remain explicitly staged work.
+> **Readiness statement:** this is a deployable vertical slice, not a production-certification claim. Local verification covers adapter contracts, request-scoped BYOK handling with non-production keys, PostgreSQL usage entries, retry and mapped cross-provider fallback, tenant-private exact caching, per-tenant fixed-window limits, webhook signature rejection, and deterministic evaluation. Real commercial-provider calls, a real GitHub review, live-review evaluation, hosted access-log/APM redaction, and execution of the GitHub release workflow remain unverified until credentials and external test infrastructure are supplied.
 
 ## The engineering story
 
@@ -25,21 +25,21 @@ flowchart LR
   NR --> AP
   AP --> EV[Evaluation framework]
   EV --> QC{Quality gate}
-  UL & QC --> GF[Grafana Cloud]
+  UL & QC -. planned export .-> GF[Grafana Cloud]
 ```
 
-For any request, the system is designed to answer: who paid, which model handled it, why it was selected, how long it took, what it cost, whether fallback/cache was involved, and—when it produced a review—how well that review matched an evaluation set.
+For successful requests, the ledger records credential ownership, provider/model, token counts, estimated cost, latency, cache use, and fallback use. It does not yet persist a detailed routing-decision explanation or failed provider attempts.
 
 ## Capabilities
 
 | Area | Implemented now | Production evolution |
 |---|---|---|
-| Gateway | Provider-neutral API, OpenAI/Anthropic/Gemini adapters, BYOK priority, capability routing, durable ledger | Redis distributed quotas, measured fallback, SSE, cancellation |
-| BYOK | `X-Provider-Key`, request scope, memory zeroing, no persistence/logging/response | KMS envelope encryption only if stored credentials become necessary |
-| AutoPR | GitHub HMAC verification, diff ingestion, deterministic signals, structured review, review posting | Queue-backed jobs, check-runs, bounded repository tools |
-| Evaluation | Importable package, CLI, precision/recall/severity/critical-miss scoring, failing quality gate | Human-calibrated judge ensemble, experiment statistics |
-| Operations | Prometheus endpoints/rules, correlation IDs, health probes, hardened containers, runbook | Grafana Cloud remote-write, managed SLOs, tracing collector |
-| Delivery | Tests/lint, Compose validation, Trivy scan, signed-build provenance/SBOM, immutable image tags | Cloud-specific OIDC deployment adapter and progressive rollout |
+| Gateway | Provider-neutral API; three contract-tested adapters; BYOK/platform resolution; retry; configured cross-provider model fallback; tenant-private exact cache; per-tenant fixed-window limit; durable success ledger | Live-provider certification, failed-attempt ledger entries, distributed load tests, SSE, cancellation |
+| BYOK | `X-Provider-Key`, request scope, memory zeroing, no application-log/API/metric leakage in local tests | Hosting access-log/APM verification; KMS envelope encryption only if stored credentials become necessary |
+| AutoPR | GitHub HMAC verification, diff ingestion, deterministic signals, structured review generation, simulated review posting | Real GitHub App/repository verification, inline comments, queue-backed jobs, check-runs |
+| Evaluation | Importable package and CLI with deterministic precision/recall/severity/critical-miss gates, verified on synthetic datasets | Evaluation of a live AutoPR review, human-calibrated judge ensemble, experiment statistics |
+| Operations | Prometheus endpoints/rules, correlation IDs, health probes, hardened Compose containers; locally verified health/metrics | Hosted remote-write, alert delivery, managed SLOs, traces, and runbook exercises remain unverified |
+| Delivery | CI/security/release workflow definitions, local test/lint and Compose verification | GitHub-hosted workflow execution, cloud OIDC deployment adapter, smoke/rollback proof |
 
 ## Quick start
 
@@ -104,7 +104,7 @@ sequenceDiagram
   participant Eval as Forge Eval
   Client->>API: Bearer token, tenant, optional BYOK header, normalized JSON
   API->>Auth: authenticate and validate tenant
-  Auth->>Cred: resolve request → stored tenant → platform → reject
+  Auth->>Cred: resolve request BYOK, otherwise platform key, otherwise reject
   Cred->>Route: request-scoped secret and ownership enum
   Route->>Route: capability check, timeout, normalized provider call
   Route-->>API: content and token usage
@@ -127,7 +127,7 @@ Detailed C4 and level-0/level-1 DFDs are in [architecture.md](docs/architecture/
 
 ## CI/CD, containers, and monitoring
 
-Pull requests compile and test Java, lint/test both Python packages, and validate Compose. The security workflow blocks high/critical filesystem findings. SemVer tags build non-root images, attach build provenance and SBOMs, and push immutable SHA/version tags to GHCR. The protected `production` environment is deliberately a deployment adapter: connect it to a chosen managed platform with OIDC rather than committing long-lived cloud credentials.
+The checked-in workflows are configured so pull requests compile/test Java, lint/test both Python packages, validate Compose configuration, and scan the filesystem with Trivy. The tag workflow is configured to build non-root images, request provenance/SBOM attestations, and publish immutable tags to GHCR. These workflow definitions have not been executed in a connected GitHub repository during local verification. The `production` job remains an explicit deployment-adapter placeholder.
 
 All application containers run as non-root with read-only filesystems and `no-new-privileges`; state is isolated in PostgreSQL/Redis volumes. Compose health gates dependency startup. For local observability:
 
@@ -135,26 +135,26 @@ All application containers run as non-root with read-only filesystems and `no-ne
 docker compose -f docker-compose.yml -f monitoring/docker-compose.monitoring.yml up --build
 ```
 
-Production sends the same low-cardinality Micrometer/Prometheus series to Grafana Cloud. Alerts cover provider error ratio, p95 latency, and failed reviews. Metrics never label by tenant, request, prompt, key, or PR diff. Logs carry correlation IDs but exclude headers and bodies. See the [provider outage runbook](docs/runbooks/provider-outage.md).
+Local services expose low-cardinality Micrometer/Prometheus series, and checked-in alert rules cover provider error ratio, p95 latency, and failed reviews. No Grafana Cloud remote-write or alert delivery was verified. Application metrics avoid tenant, request, prompt, key, and PR-diff labels; local application logs were scanned for test credentials with zero matches. Hosting-platform access logs and external APM remain unverified. The provider outage runbook is documented but has not been exercised.
 
 ## Quality and security gates
 
 - Unit tests validate secret priority/zeroing, GitHub signature comparison, and deterministic evaluation penalties.
 - Provider traffic is mocked in tests; real keys must never enter CI.
-- Database/Redis Testcontainers and cross-tenant cache tests are required before enabling the proposed cache/rate-limit modules.
+- Redis cache and rate-limit units are enabled. Unit tests validate hashed tenant/provider identities, and Compose runtime checks validate cross-tenant cache isolation. Java Testcontainers could not connect to this Windows Docker named pipe and is not claimed as passing.
 - Review quality promotion requires a representative labeled set, zero critical misses, stable precision/recall, and human review—not one judge score.
 - Release readiness also requires load testing under provider latency and 429/5xx injection. The likely first 10× bottleneck is synchronous ledger writes; batch/outbox persistence is the measured next step, not premature Kafka.
 
 ## Delivery roadmap
 
 1. **MVP (this repository):** BYOK Gateway vertical slice, three adapters, ledger, AutoPR workflow, deterministic evaluation, hardened Compose, CI/security/release scaffolding.
-2. **Production-oriented:** Redis token-bucket limits, exact tenant cache, Resilience4j fallback matrix, Testcontainers contracts, OpenTelemetry traces, queue-backed webhook jobs, managed backing services.
+2. **Production-oriented:** distributed quota/load validation, circuit-breaker calibration, Testcontainers or equivalent CI integration contracts, OpenTelemetry traces, queue-backed webhook jobs, managed backing services.
 3. **Advanced:** prompt registry/experiments, SSE, encrypted account credentials with KMS, semantic caching with leakage/false-match tests.
 4. **R&D:** adaptive quality/cost routing, agent-vs-single-pass benchmarks, calibrated LLM judges, trajectory evaluation.
 
 ## Interview narrative
 
-“I built the infrastructure around AI applications: a tenant-aware multi-provider Gateway with BYOK economics and auditable cost ownership; an autonomous PR reviewer that cannot bypass that control plane; and an evaluation package that turns AI quality into a repeatable CI signal. I kept secrets out of payloads, logs, caches, and ledgers, documented failure boundaries, and resisted Kafka/Kubernetes/vector databases until measurements justify them.”
+“I built the infrastructure around AI applications: a tenant-aware multi-provider Gateway with BYOK economics and auditable cost ownership; a PR-review workflow designed to use that control plane; and an evaluation package that turns AI quality into a repeatable CI signal. Local tests prove the control boundaries; live provider and GitHub certification are the next external verification gates.”
 
 ## License
 
