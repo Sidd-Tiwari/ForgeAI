@@ -4,8 +4,8 @@ COPY pom.xml .
 RUN mvn -B -q dependency:go-offline
 COPY src src
 RUN mvn -B -q -DskipTests package
-FROM eclipse-temurin:21-jre-alpine
-RUN addgroup -S forgeai && adduser -S forgeai -G forgeai
+FROM eclipse-temurin:21-jre-noble
+RUN groupadd --system --gid 10001 forgeai && useradd --system --uid 10001 --gid forgeai --no-create-home forgeai
 WORKDIR /app
 COPY --from=build /workspace/target/gateway-*.jar app.jar
 USER forgeai

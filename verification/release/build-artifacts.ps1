@@ -16,6 +16,7 @@ if ($Tag -notmatch "^[0-9a-z._-]+$") {
 $null = New-Item -ItemType Directory -Force -Path $ArtifactDirectory
 $artifactRoot = (Resolve-Path -LiteralPath $ArtifactDirectory).Path
 $services = @("gateway", "autopr")
+$services += 'dashboard'
 $releaseImages = @()
 
 function Export-Attestations {

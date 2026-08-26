@@ -1,7 +1,10 @@
 name: forgeai
 services:
   postgres:
-    image: postgres:17-alpine
+    image: forgeai-postgres:local
+    build:
+      context: .
+      dockerfile: infra/postgres/Dockerfile
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-forgeai}
       POSTGRES_USER: ${POSTGRES_USER:-forgeai}
