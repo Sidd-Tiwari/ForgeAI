@@ -1,4 +1,5 @@
 .env
+verification/artifacts/
 *.log
 .idea/
 .vscode/
