@@ -27,12 +27,12 @@
         <div class='title'><div><h2>Send a mock request</h2><p>No provider credential is stored by this page.</p></div><span>POST /v1/generate</span></div>
         <form id='request-form' novalidate>
           <div class='form-grid'>
-            <label>Tenant ID<input id='tenant' name='tenant' required autocomplete='off' value='ui-local'></label>
-            <label>Local access token<input id='access-token' name='accessToken' type='password' required autocomplete='off' placeholder='Gateway internal token'></label>
-            <label>Provider<select id='provider' name='provider'><option value='ANTHROPIC'>Anthropic (local mock)</option></select></label>
-            <label>Model<input id='model' name='model' required value='claude-mock' autocomplete='off'></label>
-            <label class='full'>BYOK key<input id='provider-key' name='providerKey' type='password' required autocomplete='off' placeholder='sk-test-not-real'></label>
-            <label class='full'>Prompt<textarea id='prompt' name='prompt' required rows='4'>Reply with a concise local verification response.</textarea></label>
+            <label>Tenant<select id='tenant' name='tenant' required><option value='demo-acme-001'>Acme demo 1</option><option value='demo-acme-002'>Acme demo 2</option><option value='demo-contoso-001'>Contoso demo</option></select></label>
+            <label>Local access token<input id='access-token' name='accessToken' type='text' required autocomplete='off' placeholder='Paste the local Gateway token'></label>
+            <label>Provider<select id='provider' name='provider'><option value='ANTHROPIC'>Anthropic (local mock)</option><option value='OPENAI'>OpenAI (local mock)</option><option value='GEMINI'>Gemini (local mock)</option></select></label>
+            <label>Model<select id='model' name='model' required><option value='claude-mock'>claude-mock</option></select></label>
+            <label class='full'>Mock key scenario<select id='provider-key' name='providerKey' required><option value='sk-test-not-real'>Valid mock key - sk-test-not-real</option><option value=''>Blank key - validation demo</option><option value='bad-key-demo'>Rejected mock key - bad-key-demo</option></select></label>
+            <label class='full'>Prompt scenario<select id='prompt' name='prompt' required><option value='Review a pull request that adds input validation to a payment API. Return three concise risks and one recommendation.'>Payment API pull-request review</option><option value='Summarize a fictional customer support incident and provide three follow-up actions.'>Customer support incident summary</option><option value='Review a fictional authentication change for security risks and recommend one mitigation.'>Authentication security review</option></select></label>
           </div>
           <div class='actions'><button id='submit-request' type='submit'>Send mock request</button><span>Requests are limited to 3 per tenant per minute in verification mode.</span></div>
         </form>

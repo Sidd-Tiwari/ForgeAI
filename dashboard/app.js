@@ -20,6 +20,22 @@ const elements = {
   ledgerState: document.querySelector('#ledger-state')
 };
 
+const mockModels = {
+  ANTHROPIC: ['claude-mock'],
+  OPENAI: ['gpt-mock'],
+  GEMINI: ['gemini-mock']
+};
+
+function syncModelOptions() {
+  elements.model.replaceChildren();
+  for (const model of mockModels[elements.provider.value]) {
+    const option = document.createElement('option');
+    option.value = model;
+    option.textContent = model;
+    elements.model.append(option);
+  }
+}
+
 function showResult(kind, title, detail) {
   elements.result.className = `result ${kind}`;
   elements.result.replaceChildren();
@@ -153,4 +169,6 @@ elements.form.addEventListener('submit', async event => {
 
 elements.refresh.addEventListener('click', loadLedger);
 elements.tenant.addEventListener('change', () => renderLedger([]));
+elements.provider.addEventListener('change', syncModelOptions);
+syncModelOptions();
 renderLedger([]);
