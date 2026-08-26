@@ -4,50 +4,166 @@
   <meta charset='utf-8'>
   <meta name='viewport' content='width=device-width, initial-scale=1'>
   <meta name='description' content='ForgeAI local Gateway verification console'>
+  <meta name='theme-color' content='#080b14'>
   <title>ForgeAI - Gateway console</title>
   <link rel='stylesheet' href='styles.css'>
 </head>
 <body>
-  <aside>
-    <div class='brand'><span>F</span>ForgeAI</div>
-    <p>Local verification console</p>
-    <nav aria-label='Primary navigation'><a class='active' href='#gateway'>Gateway</a><a href='#usage'>Usage ledger</a></nav>
-    <div class='status'><i></i> Local stack connected</div>
+  <a class='skip-link' href='#main-content'>Skip to dashboard</a>
+  <div class='ambient ambient-one' aria-hidden='true'></div>
+  <div class='ambient ambient-two' aria-hidden='true'></div>
+
+  <aside class='sidebar'>
+    <div class='brand-block'>
+      <div class='brand'><span class='brand-mark'>F</span><span>ForgeAI</span></div>
+      <p>AI control plane</p>
+    </div>
+
+    <nav aria-label='Primary navigation'>
+      <a class='active' href='#gateway'><span class='nav-dot' aria-hidden='true'></span>Gateway</a>
+      <a href='#usage'><span class='nav-dot' aria-hidden='true'></span>Usage ledger</a>
+    </nav>
+
+    <div class='sidebar-note'>
+      <span>Verification workspace</span>
+      <strong>Local environment</strong>
+    </div>
+    <div class='status' id='connection-status'><i></i><span>Local stack connected</span></div>
   </aside>
-  <main>
-    <header><div><small>CONTROL PLANE / LOCAL</small><h1>Gateway verification</h1><p>Exercise BYOK routing against the local mock provider and inspect its ledger.</p></div><span class='environment'>MOCK / LOCAL</span></header>
+
+  <main id='main-content'>
+    <header class='hero'>
+      <div class='hero-copy'>
+        <div class='eyebrow'><span></span>CONTROL PLANE / LOCAL</div>
+        <h1>Gateway <span>verification</span></h1>
+        <p>Route mock LLM traffic, validate BYOK boundaries, and inspect every usage event from one operational workspace.</p>
+        <div class='hero-points' aria-label='Environment guarantees'>
+          <span>Three providers</span>
+          <span>Request-scoped keys</span>
+          <span>Auditable ledger</span>
+        </div>
+      </div>
+      <div class='environment-card'>
+        <span class='environment'><i></i>MOCK / LOCAL</span>
+        <small>Safe verification mode</small>
+      </div>
+    </header>
+
     <section class='cards' aria-label='Ledger summary'>
-      <article><label>Ledger rows</label><strong id='total-rows'>0</strong><em id='ledger-state'>Not loaded</em></article>
-      <article><label>Successful</label><strong id='successful-rows'>0</strong><em>Current tenant</em></article>
-      <article><label>Cache hits</label><strong id='cache-hits'>0</strong><em>Current tenant</em></article>
-      <article><label>Credential mode</label><strong class='text-value' id='credential-mode'>-</strong><em>Latest request</em></article>
+      <article class='metric-card purple'>
+        <div class='metric-head'><label>Ledger rows</label><span class='metric-icon'>01</span></div>
+        <strong id='total-rows'>0</strong>
+        <em id='ledger-state'>Not loaded</em>
+      </article>
+      <article class='metric-card green'>
+        <div class='metric-head'><label>Successful</label><span class='metric-icon'>02</span></div>
+        <strong id='successful-rows'>0</strong>
+        <em>Current tenant</em>
+      </article>
+      <article class='metric-card blue'>
+        <div class='metric-head'><label>Cache hits</label><span class='metric-icon'>03</span></div>
+        <strong id='cache-hits'>0</strong>
+        <em>Current tenant</em>
+      </article>
+      <article class='metric-card amber'>
+        <div class='metric-head'><label>Credential mode</label><span class='metric-icon'>04</span></div>
+        <strong class='text-value' id='credential-mode'>-</strong>
+        <em>Latest request</em>
+      </article>
     </section>
-    <section class='grid'>
-      <article class='panel' id='gateway'>
-        <div class='title'><div><h2>Send a mock request</h2><p>No provider credential is stored by this page.</p></div><span>POST /v1/generate</span></div>
+
+    <section class='workspace'>
+      <article class='panel request-panel' id='gateway'>
+        <div class='panel-header'>
+          <div>
+            <span class='section-kicker'>REQUEST LAB</span>
+            <h2>Send a mock request</h2>
+            <p>Choose a verified scenario and observe the complete routing result.</p>
+          </div>
+          <span class='api-route'>POST&nbsp; /v1/generate</span>
+        </div>
+
+        <div class='privacy-banner'>
+          <span class='shield' aria-hidden='true'>✓</span>
+          <div><strong>Credential-safe by design</strong><span>No provider credential is persisted by this dashboard.</span></div>
+        </div>
+
         <form id='request-form' novalidate>
           <div class='form-grid'>
-            <label>Tenant<select id='tenant' name='tenant' required><option value='demo-acme-001'>Acme demo 1</option><option value='demo-acme-002'>Acme demo 2</option><option value='demo-contoso-001'>Contoso demo</option></select></label>
-            <label>Local access token<input id='access-token' name='accessToken' type='text' required autocomplete='off' placeholder='Paste the local Gateway token'></label>
-            <label>Provider<select id='provider' name='provider'><option value='ANTHROPIC'>Anthropic (local mock)</option><option value='OPENAI'>OpenAI (local mock)</option><option value='GEMINI'>Gemini (local mock)</option></select></label>
-            <label>Model<select id='model' name='model' required><option value='claude-mock'>claude-mock</option></select></label>
-            <label class='full'>Mock key scenario<select id='provider-key' name='providerKey' required><option value='sk-test-not-real'>Valid mock key - sk-test-not-real</option><option value=''>Blank key - validation demo</option><option value='bad-key-demo'>Rejected mock key - bad-key-demo</option></select></label>
-            <label class='full'>Prompt scenario<select id='prompt' name='prompt' required><option value='Review a pull request that adds input validation to a payment API. Return three concise risks and one recommendation.'>Payment API pull-request review</option><option value='Summarize a fictional customer support incident and provide three follow-up actions.'>Customer support incident summary</option><option value='Review a fictional authentication change for security risks and recommend one mitigation.'>Authentication security review</option></select></label>
+            <div class='field'>
+              <label for='tenant'>Tenant</label>
+              <select id='tenant' name='tenant' required>
+                <option value='demo-acme-001'>Acme demo 1</option>
+                <option value='demo-acme-002'>Acme demo 2</option>
+                <option value='demo-contoso-001'>Contoso demo</option>
+              </select>
+            </div>
+            <div class='field'>
+              <label for='access-token'>Local access token</label>
+              <input id='access-token' name='accessToken' type='text' required autocomplete='off' spellcheck='false' placeholder='Paste the local Gateway token'>
+            </div>
+            <div class='field'>
+              <label for='provider'>Provider</label>
+              <select id='provider' name='provider'>
+                <option value='ANTHROPIC'>Anthropic (local mock)</option>
+                <option value='OPENAI'>OpenAI (local mock)</option>
+                <option value='GEMINI'>Gemini (local mock)</option>
+              </select>
+            </div>
+            <div class='field'>
+              <label for='model'>Model</label>
+              <select id='model' name='model' required><option value='claude-mock'>claude-mock</option></select>
+            </div>
+            <div class='field full'>
+              <label for='provider-key'>Mock key scenario</label>
+              <select id='provider-key' name='providerKey' required>
+                <option value='sk-test-not-real'>Valid mock key - sk-test-not-real</option>
+                <option value=''>Blank key - validation demo</option>
+                <option value='bad-key-demo'>Rejected mock key - bad-key-demo</option>
+              </select>
+            </div>
+            <div class='field full'>
+              <label for='prompt'>Prompt scenario</label>
+              <select id='prompt' name='prompt' required>
+                <option value='Review a pull request that adds input validation to a payment API. Return three concise risks and one recommendation.'>Payment API pull-request review</option>
+                <option value='Summarize a fictional customer support incident and provide three follow-up actions.'>Customer support incident summary</option>
+                <option value='Review a fictional authentication change for security risks and recommend one mitigation.'>Authentication security review</option>
+              </select>
+            </div>
           </div>
-          <div class='actions'><button id='submit-request' type='submit'>Send mock request</button><span>Requests are limited to 3 per tenant per minute in verification mode.</span></div>
+          <div class='actions'>
+            <button id='submit-request' class='primary' type='submit'>Send mock request</button>
+            <span><i></i>3 requests per tenant / minute</span>
+          </div>
         </form>
         <div id='request-result' class='result' role='status' aria-live='polite' hidden></div>
       </article>
-      <article class='panel' id='usage'>
-        <div class='title'><div><h2>Usage ledger</h2><p>Latest rows for the selected tenant.</p></div><button id='refresh-ledger' class='secondary' type='button'>Refresh ledger</button></div>
+
+      <article class='panel ledger-panel' id='usage'>
+        <div class='panel-header'>
+          <div>
+            <span class='section-kicker'>OBSERVABILITY</span>
+            <h2>Usage ledger</h2>
+            <p>Latest attributed requests for the selected tenant.</p>
+          </div>
+          <button id='refresh-ledger' class='secondary' type='button'>Refresh ledger</button>
+        </div>
         <div class='table-wrap'>
-          <table><thead><tr><th>Provider</th><th>Model</th><th>Cache hit</th><th>Credential source</th><th>Status</th><th>Latency</th></tr></thead><tbody id='ledger-body'></tbody></table>
-          <div id='ledger-empty' class='empty-state'><strong>No usage yet</strong><span>Send a mock request to create the first ledger row for this tenant.</span></div>
+          <table>
+            <thead><tr><th>Provider</th><th>Model</th><th>Cache hit</th><th>Credential source</th><th>Status</th><th>Latency</th></tr></thead>
+            <tbody id='ledger-body'></tbody>
+          </table>
+          <div id='ledger-empty' class='empty-state'>
+            <span class='empty-icon' aria-hidden='true'>↗</span>
+            <strong>No usage yet</strong>
+            <span>Send a mock request to create the first ledger row for this tenant.</span>
+          </div>
         </div>
         <div id='ledger-error' class='result error' role='alert' hidden></div>
       </article>
     </section>
-    <footer>Local mock verification only - Credentials remain in browser memory and are never persisted</footer>
+
+    <footer><span>ForgeAI local verification</span><i></i>Credentials stay in browser memory and are never persisted</footer>
   </main>
   <script src='app.js'></script>
 </body>

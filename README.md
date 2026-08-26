@@ -17,6 +17,8 @@ ForgeAI is a production-oriented AI engineering platform. Its core is a multi-pr
 
 *Click the screenshot to open the full-resolution verification view. It shows the local mock-provider workflow completing successfully, request-scoped BYOK attribution, and the resulting usage-ledger entry without using production provider credentials.*
 
+[Open the responsive mobile verification capture](docs/images/forgeai-dashboard-mobile.png)
+
 ## The engineering story
 
 ```mermaid

@@ -17,7 +17,10 @@ const elements = {
   successfulRows: document.querySelector('#successful-rows'),
   cacheHits: document.querySelector('#cache-hits'),
   credentialMode: document.querySelector('#credential-mode'),
-  ledgerState: document.querySelector('#ledger-state')
+  ledgerState: document.querySelector('#ledger-state'),
+  ledgerPanel: document.querySelector('#usage'),
+  connectionStatus: document.querySelector('#connection-status'),
+  navLinks: [...document.querySelectorAll('nav a')]
 };
 
 const mockModels = {
@@ -37,6 +40,9 @@ function syncModelOptions() {
 }
 
 function showResult(kind, title, detail) {
+  elements.result.hidden = true;
+  elements.result.className = 'result';
+  void elements.result.offsetWidth;
   elements.result.className = `result ${kind}`;
   elements.result.replaceChildren();
   const heading = document.createElement('strong');
@@ -47,6 +53,19 @@ function showResult(kind, title, detail) {
   elements.result.hidden = false;
 }
 
+function setButtonBusy(button, busy, busyLabel, idleLabel) {
+  button.disabled = busy;
+  button.setAttribute('aria-busy', String(busy));
+  button.textContent = busy ? busyLabel : idleLabel;
+}
+
+function setConnectionState(connected) {
+  elements.connectionStatus.classList.toggle('offline', !connected);
+  elements.connectionStatus.querySelector('span').textContent = connected
+    ? 'Local stack connected'
+    : 'Gateway unavailable';
+}
+
 function validateConnectionFields(requireByok = false) {
   const required = [elements.tenant, elements.accessToken];
   if (requireByok) required.push(elements.model, elements.providerKey, elements.prompt);
@@ -54,7 +73,7 @@ function validateConnectionFields(requireByok = false) {
     if (!field.value.trim()) {
       field.setAttribute('aria-invalid', 'true');
       field.focus();
-      const label = field.closest('label').firstChild.textContent.trim();
+      const label = document.querySelector(`label[for='${field.id}']`)?.textContent.trim() || 'Field';
       showResult('error', 'Request not sent', `${label} is required.`);
       return false;
     }
@@ -85,26 +104,31 @@ function headers() {
 
 async function loadLedger() {
   if (!validateConnectionFields(false)) return;
-  elements.refresh.disabled = true;
+  setButtonBusy(elements.refresh, true, 'Refreshing...', 'Refresh ledger');
+  elements.ledgerPanel.setAttribute('aria-busy', 'true');
   elements.ledgerError.hidden = true;
   try {
     const response = await fetch(`${gatewayBaseUrl}/v1/ledger`, { headers: headers() });
     const body = await parseResponse(response);
     if (!response.ok) throw new Error(problemMessage(response.status, body));
     renderLedger(Array.isArray(body) ? body : []);
+    setConnectionState(true);
   } catch (error) {
     elements.ledgerError.textContent = error instanceof TypeError
       ? 'Gateway is unreachable. Confirm the local stack is running.'
       : error.message;
     elements.ledgerError.hidden = false;
+    if (error instanceof TypeError) setConnectionState(false);
   } finally {
-    elements.refresh.disabled = false;
+    setButtonBusy(elements.refresh, false, 'Refreshing...', 'Refresh ledger');
+    elements.ledgerPanel.setAttribute('aria-busy', 'false');
   }
 }
 
-function cell(value) {
+function cell(value, label) {
   const td = document.createElement('td');
   td.textContent = value;
+  td.dataset.label = label;
   return td;
 }
 
@@ -112,15 +136,15 @@ function renderLedger(rows) {
   elements.ledgerBody.replaceChildren();
   for (const row of rows) {
     const tr = document.createElement('tr');
-    const status = cell(row.status);
+    const status = cell(row.status, 'Status');
     status.className = row.status === 'SUCCESS' ? 'good-text' : 'bad-text';
     tr.append(
-      cell(row.provider),
-      cell(row.model),
-      cell(row.cacheHit ? 'Yes' : 'No'),
-      cell(row.credentialSource),
+      cell(row.provider, 'Provider'),
+      cell(row.model, 'Model'),
+      cell(row.cacheHit ? 'Yes' : 'No', 'Cache hit'),
+      cell(row.credentialSource, 'Credential'),
       status,
-      cell(`${row.latencyMs} ms`)
+      cell(`${row.latencyMs} ms`, 'Latency')
     );
     elements.ledgerBody.append(tr);
   }
@@ -135,8 +159,7 @@ function renderLedger(rows) {
 elements.form.addEventListener('submit', async event => {
   event.preventDefault();
   if (!validateConnectionFields(true)) return;
-  elements.submit.disabled = true;
-  elements.submit.textContent = 'Sending...';
+  setButtonBusy(elements.submit, true, 'Sending...', 'Send mock request');
   const requestHeaders = { ...headers(), 'Content-Type': 'application/json', 'X-Application': 'dashboard' };
   requestHeaders['X-Provider-Key'] = elements.providerKey.value;
   try {
@@ -158,17 +181,26 @@ elements.form.addEventListener('submit', async event => {
       return;
     }
     showResult('success', `${body.provider} - ${body.model}`, body.content || 'Request completed successfully.');
+    setConnectionState(true);
     await loadLedger();
   } catch (error) {
     showResult('error', 'Gateway unavailable', error instanceof TypeError ? 'Could not reach the local Gateway.' : error.message);
+    if (error instanceof TypeError) setConnectionState(false);
   } finally {
-    elements.submit.disabled = false;
-    elements.submit.textContent = 'Send mock request';
+    setButtonBusy(elements.submit, false, 'Sending...', 'Send mock request');
   }
 });
 
 elements.refresh.addEventListener('click', loadLedger);
 elements.tenant.addEventListener('change', () => renderLedger([]));
 elements.provider.addEventListener('change', syncModelOptions);
+for (const field of [elements.tenant, elements.accessToken, elements.model, elements.providerKey, elements.prompt]) {
+  field.addEventListener('input', () => field.removeAttribute('aria-invalid'));
+}
+for (const link of elements.navLinks) {
+  link.addEventListener('click', () => {
+    elements.navLinks.forEach(item => item.classList.toggle('active', item === link));
+  });
+}
 syncModelOptions();
 renderLedger([]);
