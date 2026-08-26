@@ -1,12 +1,12 @@
 # ForgeAI
 
-### Reliable LLM orchestration, autonomous code review, and continuous AI evaluation
+### Reliable LLM orchestration, Gateway-bound code review, and continuous AI evaluation
 
 [![CI](https://img.shields.io/badge/CI-tested-34d399)](.github/workflows/ci.yml) [![Security](https://img.shields.io/badge/security-BYOK_isolated-8b5cf6)](SECURITY.md) [![Java](https://img.shields.io/badge/Java-21-ef4444)](gateway) [![Python](https://img.shields.io/badge/Python-3.12-38bdf8)](autopr)
 
 ForgeAI is a production-oriented AI engineering platform. Its core is a multi-provider Gateway that owns tenant identity, request-scoped BYOK credentials, routing, normalized provider calls, usage attribution, and operational telemetry. AutoPR is implemented to consume only that Gateway, then the reusable evaluation package measures review quality.
 
-> **Readiness statement:** this is a deployable vertical slice, not a production-certification claim. Local verification covers adapter contracts, request-scoped BYOK handling with non-production keys, PostgreSQL usage entries, retry and mapped cross-provider fallback, tenant-private exact caching, per-tenant fixed-window limits, webhook signature rejection, and deterministic evaluation. Real commercial-provider calls, a real GitHub review, live-review evaluation, hosted access-log/APM redaction, and execution of the GitHub release workflow remain unverified until credentials and external test infrastructure are supplied.
+> **Readiness statement:** this is a deployable vertical slice, not a production-certification claim. Local verification covers adapter contracts, request-scoped BYOK handling with non-production keys, PostgreSQL usage entries, retry and mapped cross-provider fallback, tenant-private exact caching, per-tenant fixed-window limits, webhook signature rejection, deterministic evaluation, SPDX image SBOMs, SLSA provenance attestations, immutable local image references, and syntax-checked provisional alerts. Real commercial-provider calls, a real GitHub review, live-review evaluation, hosted access-log/APM redaction, and execution of the GitHub release workflow remain unverified until credentials and external test infrastructure are supplied.
 
 ## The engineering story
 
@@ -16,14 +16,14 @@ flowchart LR
   AP --> GW[ForgeAI Gateway]
   GW --> CR{Credential resolver}
   CR -->|Request BYOK| RT[Routing policy]
-  CR -->|Platform quota| RT
+  CR -->|Platform credential| RT
   RT --> AN[Anthropic]
   RT --> OA[OpenAI]
   RT --> GE[Gemini]
   AN & OA & GE --> NR[Normalized response]
   NR --> UL[(Usage + cost ledger)]
   NR --> AP
-  AP --> EV[Evaluation framework]
+  AP -. captured review output via manual dataset preparation .-> EV[Evaluation framework]
   EV --> QC{Quality gate}
   UL & QC -. planned export .-> GF[Grafana Cloud]
 ```
@@ -38,12 +38,12 @@ For successful requests, the ledger records credential ownership, provider/model
 | BYOK | `X-Provider-Key`, request scope, memory zeroing, no application-log/API/metric leakage in local tests | Hosting access-log/APM verification; KMS envelope encryption only if stored credentials become necessary |
 | AutoPR | GitHub HMAC verification, diff ingestion, deterministic signals, structured review generation, simulated review posting | Real GitHub App/repository verification, inline comments, queue-backed jobs, check-runs |
 | Evaluation | Importable package and CLI with deterministic precision/recall/severity/critical-miss gates, verified on synthetic datasets | Evaluation of a live AutoPR review, human-calibrated judge ensemble, experiment statistics |
-| Operations | Prometheus endpoints/rules, correlation IDs, health probes, hardened Compose containers; locally verified health/metrics | Hosted remote-write, alert delivery, managed SLOs, traces, and runbook exercises remain unverified |
-| Delivery | CI/security/release workflow definitions, local test/lint and Compose verification | GitHub-hosted workflow execution, cloud OIDC deployment adapter, smoke/rollback proof |
+| Operations | Prometheus endpoints/rules, correlation IDs, health probes, hardened Compose containers, observed-failure runbook, and measured provisional objectives | Hosted remote-write, alert delivery, production SLO calibration, traces, and broader failure exercises |
+| Delivery | CI/security/release workflow definitions, local test/lint and Compose verification, generated image SBOM/provenance files, commit tags, and immutable digests | GitHub-hosted workflow execution, cloud OIDC deployment adapter, smoke/rollback proof |
 
 ## Quick start
 
-Requirements: Docker Desktop with Compose. Provider-owned keys are optional because the system works in BYOK-only mode.
+Requirements: Docker Desktop with Compose. Platform-funded provider keys are optional; an inference request still requires either `X-Provider-Key` BYOK or the corresponding configured platform key.
 
 ```bash
 cp .env.example .env
@@ -85,10 +85,12 @@ forge-eval run eval-framework/datasets/smoke.json --minimum-score 0.90
 | [`autopr`](autopr) | FastAPI GitHub application and review agent |
 | [`eval-framework`](eval-framework) | Reusable Python evaluator and CLI |
 | [`dashboard`](dashboard) | Responsive, security-header-hardened control-plane UI |
-| [`monitoring`](monitoring) | Prometheus scrape config and actionable SLO alerts |
+| [`monitoring`](monitoring) | Prometheus scrape config and provisional, syntax-checked alert rules |
 | [`docs/architecture`](docs/architecture) | C4, DFDs, request lifecycle, trade-offs |
 | [`docs/adr`](docs/adr) | Required decision register |
-| [`docs/runbooks`](docs/runbooks) | Incident and recovery procedures |
+| [`docs/runbooks`](docs/runbooks) | Procedures for observed failures plus explicit untested-mode boundaries |
+| [`docs/operations`](docs/operations) | Measurement-derived provisional objectives and calibration limits |
+| [`verification/release`](verification/release) | Reproducible local SBOM, provenance, and immutable-image manifest generation |
 
 ## Request and data lifecycle
 
@@ -98,16 +100,20 @@ sequenceDiagram
   actor Client
   participant API as Gateway API
   participant Auth as Auth + tenant boundary
+  participant Policy as Rate limit + exact cache
   participant Cred as Credential resolver
   participant Route as Router/provider adapter
   participant DB as PostgreSQL ledger
   participant Eval as Forge Eval
   Client->>API: Bearer token, tenant, optional BYOK header, normalized JSON
   API->>Auth: authenticate and validate tenant
+  Auth->>Policy: fixed-window tenant limit, then exact cache lookup
+  Policy-->>API: HTTP 429, cached response, or cache miss
   Auth->>Cred: resolve request BYOK, otherwise platform key, otherwise reject
   Cred->>Route: request-scoped secret and ownership enum
-  Route->>Route: capability check, timeout, normalized provider call
+  Route->>Route: capability check, retry, mapped fallback, normalized provider call
   Route-->>API: content and token usage
+  API->>Policy: cache successful normalized response with TTL
   API->>DB: cost ownership + provider/model/tokens/latency/status
   API-->>Client: content + trace metadata, never secret
   Client->>Eval: review + labeled dataset
@@ -127,7 +133,11 @@ Detailed C4 and level-0/level-1 DFDs are in [architecture.md](docs/architecture/
 
 ## CI/CD, containers, and monitoring
 
-The checked-in workflows are configured so pull requests compile/test Java, lint/test both Python packages, validate Compose configuration, and scan the filesystem with Trivy. The tag workflow is configured to build non-root images, request provenance/SBOM attestations, and publish immutable tags to GHCR. These workflow definitions have not been executed in a connected GitHub repository during local verification. The `production` job remains an explicit deployment-adapter placeholder.
+The checked-in workflows are configured so pull requests compile/test Java, lint/test both Python packages, validate Compose configuration, and scan the filesystem with Trivy. The tag workflow is configured to build non-root images, request provenance/SBOM attestations, and publish immutable tags to GHCR. Local release verification uses `verification/release/build-artifacts.ps1` to emit SPDX SBOMs, in-toto/SLSA provenance, BuildKit metadata, commit-tagged images, and digest-pinned references under the ignored `verification/artifacts` directory. These GitHub workflow definitions have not been executed because no remote is configured. The `production` job remains an explicit deployment-adapter placeholder.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File verification/release/build-artifacts.ps1
+```
 
 All application containers run as non-root with read-only filesystems and `no-new-privileges`; state is isolated in PostgreSQL/Redis volumes. Compose health gates dependency startup. For local observability:
 
@@ -135,7 +145,7 @@ All application containers run as non-root with read-only filesystems and `no-ne
 docker compose -f docker-compose.yml -f monitoring/docker-compose.monitoring.yml up --build
 ```
 
-Local services expose low-cardinality Micrometer/Prometheus series, and checked-in alert rules cover provider error ratio, p95 latency, and failed reviews. No Grafana Cloud remote-write or alert delivery was verified. Application metrics avoid tenant, request, prompt, key, and PR-diff labels; local application logs were scanned for test credentials with zero matches. Hosting-platform access logs and external APM remain unverified. The provider outage runbook is documented but has not been exercised.
+Local services expose low-cardinality Micrometer/Prometheus series. Syntax-checked alert rules cover provider errors, the measured provisional 375 ms Gateway p95, a 60% exact-repeat cache rate, and failed reviews. No Grafana Cloud remote-write or alert delivery was verified. Application metrics avoid tenant, request, prompt, key, and PR-diff labels; local application logs were scanned for test credentials with zero matches. Hosting-platform access logs and external APM remain unverified. The incident runbook is limited to the exercised 503/fallback, tenant 429, and unsigned-webhook 401 paths; other failure modes are explicitly marked untested. See the [provisional objectives](docs/operations/slo.md).
 
 ## Quality and security gates
 

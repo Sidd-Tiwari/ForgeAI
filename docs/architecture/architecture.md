@@ -12,7 +12,7 @@ C4Container
     Container(ui, "Control plane", "HTML/CSS", "Operational views; never renders credentials")
     Container(auto, "AutoPR", "FastAPI", "Verifies events and orchestrates review")
     Container(gw, "Gateway", "Spring Boot", "Credentials, routing, resilience, ledger")
-    Container(eval, "Evaluation", "Python package/CLI", "Deterministic and judge scoring")
+    Container(eval, "Evaluation", "Python package/CLI", "Deterministic scoring; calibrated judge planned")
     ContainerDb(pg, "PostgreSQL", "Durable ledger and configuration")
     ContainerDb(redis, "Redis", "Rate limits and tenant-private cache")
   }
@@ -22,7 +22,7 @@ C4Container
   Rel(gw, llms, "TLS + request-scoped credential")
   Rel(gw, pg, "Ledger")
   Rel(gw, redis, "Limits/cache")
-  Rel(auto, eval, "Review result")
+  Rel(user, eval, "Runs prepared datasets containing captured review results")
   Rel(gw, grafana, "Planned low-cardinality telemetry export")
 ```
 
@@ -36,8 +36,8 @@ flowchart LR
   P -->|normalized answer + usage| G
   G -->|metadata, no secrets| L[(Usage ledger)]
   G -->|answer + trace ID| A
-  A -->|review| E[Evaluation]
-  E -->|quality result| O[Monitoring]
+  A -. captured review output via manual dataset preparation .-> E[Evaluation]
+  E -->|JSON report + process exit code| O[CLI / CI quality gate]
 ```
 
 ## DFD level 1 — credential resolution and inference
@@ -51,14 +51,31 @@ sequenceDiagram
   participant P as Provider adapter
   participant D as Ledger
   C->>G: JSON + X-Tenant-Id + optional X-Provider-Key
-  G->>Q: quota(tenant, provider, model)
-  G->>R: request BYOK, otherwise platform key, otherwise reject
-  R-->>G: request-scoped char[] + ownership
-  G->>P: normalized request + credential
-  P-->>G: normalized result/usage
-  G->>D: ownership, tokens, latency, route, status
-  G-->>C: result + trace, never credential
-  G->>G: zero request credential buffer
+  G->>Q: increment fixed-window counter for tenant
+  alt limit exceeded
+    Q-->>G: reject
+    G-->>C: HTTP 429; no ledger row
+  else allowed
+    Q-->>G: allow
+    G->>Q: exact lookup(tenant, selected provider, request)
+    alt cache hit
+      Q-->>G: cached normalized result
+      G->>D: zero-cost cache-hit ledger row
+      G-->>C: cached result + trace
+    else cache miss
+      Q-->>G: miss
+      G->>R: request BYOK, otherwise platform key, otherwise reject
+      R-->>G: request-scoped char[] + ownership
+      G->>P: normalized request + credential; retry transient failure
+      P-->>G: failure may trigger configured mapped fallback
+      G->>P: fallback model + platform credential when eligible
+      P-->>G: normalized result/usage
+      G->>Q: cache successful normalized result with TTL
+      G->>D: ownership, tokens, latency, route, status
+      G-->>C: result + trace, never credential
+      G->>G: zero request credential buffer
+    end
+  end
 ```
 
 ## Key decisions
@@ -70,7 +87,7 @@ sequenceDiagram
 | REST + non-streaming MVP | Clear retry and ledger semantics | Add SSE when interactive token latency is measured as material |
 | PostgreSQL ledger | Durable, queryable cost ownership | Buffer writes only when measured write latency dominates |
 | Redis, no Kafka | Rate/cache needs without operational excess | Add event bus when durable async consumers and replay exist |
-| Deterministic eval first | Reproducible CI gate | Blend calibrated judges after human-labeled validation |
+| Deterministic eval first | Reproducible CLI/CI gate | Blend calibrated judges after human-labeled validation |
 | Direct GitHub API | Narrow tool attack surface | Add MCP when multiple interchangeable tool hosts create value |
 
 Exact caching is enabled with a configurable TTL. Tenant, selected provider, and the canonical normalized request are hashed into the Redis identity; credentials are never cache inputs or values. Unit tests and a local Compose runtime check cover cross-tenant isolation. Semantic caching remains intentionally unimplemented.
