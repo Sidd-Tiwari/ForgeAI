@@ -4,9 +4,18 @@
 
 [![CI](https://img.shields.io/badge/CI-tested-34d399)](.github/workflows/ci.yml) [![Security](https://img.shields.io/badge/security-BYOK_isolated-8b5cf6)](SECURITY.md) [![Java](https://img.shields.io/badge/Java-21-ef4444)](gateway) [![Python](https://img.shields.io/badge/Python-3.12-38bdf8)](autopr)
 
+**Created and engineered by Siddharth Tiwari**<br>
+Software Engineer | Java & Spring Boot | Microservices | Distributed Systems | System Design | REST APIs | Generative AI & LLM Integration
+
 ForgeAI is a production-oriented AI engineering platform. Its core is a multi-provider Gateway that owns tenant identity, request-scoped BYOK credentials, routing, normalized provider calls, usage attribution, and operational telemetry. AutoPR is implemented to consume only that Gateway, then the reusable evaluation package measures review quality.
 
 > **Readiness statement:** this is a deployable vertical slice, not a production-certification claim. Local verification covers adapter contracts, request-scoped BYOK handling with non-production keys, PostgreSQL usage entries, retry and mapped cross-provider fallback, tenant-private exact caching, per-tenant fixed-window limits, webhook signature rejection, deterministic evaluation, SPDX image SBOMs, SLSA provenance attestations, immutable local image references, and syntax-checked provisional alerts. Real commercial-provider calls, a real GitHub review, live-review evaluation, hosted access-log/APM redaction, and execution of the GitHub release workflow remain unverified until credentials and external test infrastructure are supplied.
+
+## Verified product preview
+
+[![ForgeAI local Gateway verification dashboard](docs/images/forgeai-dashboard-verification.png)](docs/images/forgeai-dashboard-verification.png)
+
+*Click the screenshot to open the full-resolution verification view. It shows the local mock-provider workflow completing successfully, request-scoped BYOK attribution, and the resulting usage-ledger entry without using production provider credentials.*
 
 ## The engineering story
 
@@ -165,6 +174,10 @@ Local services expose low-cardinality Micrometer/Prometheus series. Syntax-check
 ## Interview narrative
 
 “I built the infrastructure around AI applications: a tenant-aware multi-provider Gateway with BYOK economics and auditable cost ownership; a PR-review workflow designed to use that control plane; and an evaluation package that turns AI quality into a repeatable CI signal. Local tests prove the control boundaries; live provider and GitHub certification are the next external verification gates.”
+
+## About the engineer
+
+**Siddharth Tiwari** is a software engineer focused on Java and Spring Boot, microservices, distributed systems, system design, REST APIs, and production-minded Generative AI and LLM integration. ForgeAI demonstrates this focus through secure multi-provider orchestration, auditable usage accounting, automated code review, deterministic evaluation, containerized delivery, and operational verification.
 
 ## License
 
