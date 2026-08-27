@@ -20,30 +20,8 @@ const elements = {
   ledgerState: document.querySelector('#ledger-state'),
   ledgerPanel: document.querySelector('#usage'),
   connectionStatus: document.querySelector('#connection-status'),
-  themeToggle: document.querySelector('#theme-toggle'),
-  themeLabel: document.querySelector('#theme-label'),
-  themeColor: document.querySelector('meta[name=theme-color]'),
   navLinks: [...document.querySelectorAll('nav a')]
 };
-
-const themeStorageKey = 'forgeai-dashboard-theme';
-
-function storedTheme() {
-  try { return localStorage.getItem(themeStorageKey); } catch { return null; }
-}
-
-function applyTheme(theme, persist = false) {
-  const light = theme === 'light';
-  document.documentElement.dataset.theme = light ? 'light' : 'dark';
-  elements.themeToggle.dataset.theme = light ? 'light' : 'dark';
-  elements.themeToggle.setAttribute('aria-pressed', String(light));
-  elements.themeToggle.setAttribute('aria-label', light ? 'Switch to dark mode' : 'Switch to light mode');
-  elements.themeLabel.textContent = light ? 'Dark mode' : 'Light mode';
-  elements.themeColor.setAttribute('content', light ? '#f4f7fc' : '#080b14');
-  if (persist) {
-    try { localStorage.setItem(themeStorageKey, light ? 'light' : 'dark'); } catch { /* Preference remains session-only. */ }
-  }
-}
 
 const mockModels = {
   ANTHROPIC: ['claude-mock'],
@@ -214,9 +192,6 @@ elements.form.addEventListener('submit', async event => {
 });
 
 elements.refresh.addEventListener('click', loadLedger);
-elements.themeToggle.addEventListener('click', () => {
-  applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light', true);
-});
 elements.tenant.addEventListener('change', () => renderLedger([]));
 elements.provider.addEventListener('change', syncModelOptions);
 for (const field of [elements.tenant, elements.accessToken, elements.model, elements.providerKey, elements.prompt]) {
@@ -227,6 +202,5 @@ for (const link of elements.navLinks) {
     elements.navLinks.forEach(item => item.classList.toggle('active', item === link));
   });
 }
-applyTheme(storedTheme() || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
 syncModelOptions();
 renderLedger([]);

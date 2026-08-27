@@ -11,6 +11,16 @@ ForgeAI is a production-oriented AI engineering platform. Its core is a multi-pr
 
 > **Readiness statement:** this is a deployable vertical slice, not a production-certification claim. Local verification covers adapter contracts, request-scoped BYOK handling with non-production keys, PostgreSQL usage entries, retry and mapped cross-provider fallback, tenant-private exact caching, per-tenant fixed-window limits, webhook signature rejection, deterministic evaluation, SPDX image SBOMs, SLSA provenance attestations, immutable local image references, and syntax-checked provisional alerts. Real commercial-provider calls, a real GitHub review, live-review evaluation, hosted access-log/APM redaction, and execution of the GitHub release workflow remain unverified until credentials and external test infrastructure are supplied.
 
+## Product experience
+
+[![ForgeAI responsive Gateway control plane](docs/images/forgeai-dashboard-verification.png)](docs/images/forgeai-dashboard-verification.png)
+
+*The current responsive control plane combines mock request execution, usage and cache metrics, handled rate-limit feedback, a tenant ledger, persistent dark/light themes, and direct entry points to dedicated Help and Documentation pages.*
+
+[Open the mobile dashboard](docs/images/forgeai-dashboard-mobile.png) · [Open the Help Center preview](docs/images/forgeai-help-center.png) · [Open the documentation-page preview](docs/images/forgeai-documentation.png)
+
+The local routes are `http://localhost:3000` for the control plane, `http://localhost:3000/help.html` for guided support, and `http://localhost:3000/docs.html` for the standalone documentation hub.
+
 ## Proof of Work
 
 [![ForgeAI mock end-to-end verification dashboard](verification/artifacts/verify-everything-dashboard.png)](verification/artifacts/verify-everything-dashboard.png)
@@ -73,6 +83,8 @@ docker compose up --build
 | Endpoint | Address | Purpose |
 |---|---|---|
 | Dashboard | http://localhost:3000 | Polished operational control-plane preview |
+| Help Center | http://localhost:3000/help.html | First-run workflow, handled states, credential guidance, and troubleshooting |
+| Documentation | http://localhost:3000/docs.html | Setup, architecture, security, operations, and verification reference |
 | Gateway health | http://localhost:8080/actuator/health | Liveness/readiness and dependency state |
 | Gateway metrics | http://localhost:8080/actuator/prometheus | Prometheus-compatible telemetry |
 | AutoPR health | http://localhost:8000/healthz | Service health |

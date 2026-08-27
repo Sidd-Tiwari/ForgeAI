@@ -25,7 +25,8 @@
     <nav aria-label='Primary navigation'>
       <a class='active' href='#gateway'><span class='nav-dot' aria-hidden='true'></span>Gateway</a>
       <a href='#usage'><span class='nav-dot' aria-hidden='true'></span>Ledger</a>
-      <a href='#help'><span class='nav-dot' aria-hidden='true'></span>Help</a>
+      <a href='help.html'><span class='nav-dot' aria-hidden='true'></span>Help</a>
+      <a href='docs.html'><span class='nav-dot' aria-hidden='true'></span>Docs</a>
     </nav>
 
     <button class='theme-toggle' id='theme-toggle' type='button' aria-label='Switch to light mode' aria-pressed='false'>
@@ -173,47 +174,34 @@
         <div id='ledger-error' class='result error' role='alert' hidden></div>
       </article>
 
-      <article class='panel help-panel' id='help'>
-        <div class='panel-header'>
+      <article class='panel help-cta'>
+        <div class='help-cta-copy'>
+          <span class='help-cta-icon' aria-hidden='true'>?</span>
           <div>
             <span class='section-kicker'>GETTING STARTED</span>
             <h2>New to ForgeAI?</h2>
-            <p>Complete your first safe, local verification in four short steps.</p>
+            <p>Open the dedicated Help Center for a guided first request, common error states, credential safety, and troubleshooting.</p>
           </div>
-          <span class='help-badge'>NO LIVE KEYS</span>
         </div>
+        <a class='help-open-link' href='help.html'>Open Help Center <span aria-hidden='true'>→</span></a>
+      </article>
 
-        <ol class='guide-grid'>
-          <li class='guide-step'>
-            <span class='step-number'>01</span>
-            <div><strong>Add the local token</strong><p>Paste the Gateway token from your local Compose environment. It authorizes this dashboard only.</p></div>
-          </li>
-          <li class='guide-step'>
-            <span class='step-number'>02</span>
-            <div><strong>Choose a scenario</strong><p>Select a tenant, mock provider, mock key behavior, and a ready-made prompt from the dropdowns.</p></div>
-          </li>
-          <li class='guide-step'>
-            <span class='step-number'>03</span>
-            <div><strong>Send the request</strong><p>Use Send mock request. The result area explains success, validation errors, or rate limits without raw stack traces.</p></div>
-          </li>
-          <li class='guide-step'>
-            <span class='step-number'>04</span>
-            <div><strong>Inspect the ledger</strong><p>Confirm provider, model, cache use, credential source, status, and latency in the usage table.</p></div>
-          </li>
-        </ol>
-
-        <div class='help-actions'>
-          <div class='help-callout'>
-            <span aria-hidden='true'>?</span>
-            <div><strong>Something not working?</strong><p>Confirm the local stack is healthy, then check the access token and selected tenant before retrying.</p></div>
+      <article class='panel documentation-cta'>
+        <div class='documentation-cta-copy'>
+          <span class='doc-cta-icon' aria-hidden='true'>D</span>
+          <div>
+            <span class='section-kicker'>PROJECT REFERENCE</span>
+            <h2>Explore the complete documentation</h2>
+            <p>Open a dedicated guide for setup, architecture, service ownership, security, verification, operations, and production boundaries.</p>
           </div>
-          <a class='start-link' href='#gateway'>Start guided request <span aria-hidden='true'>→</span></a>
         </div>
+        <a class='docs-open-link' href='docs.html'>Open documentation <span aria-hidden='true'>→</span></a>
       </article>
     </section>
 
     <footer><span>ForgeAI local verification</span><i></i>Credentials stay in browser memory and are never persisted</footer>
   </main>
+  <script src='theme.js'></script>
   <script src='app.js'></script>
 </body>
 </html>

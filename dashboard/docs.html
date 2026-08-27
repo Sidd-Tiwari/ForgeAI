@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <meta name='description' content='ForgeAI project documentation'>
+  <meta name='theme-color' content='#080b14'>
+  <title>ForgeAI - Documentation</title>
+  <link rel='stylesheet' href='styles.css'>
+</head>
+<body class='docs-page'>
+  <a class='skip-link' href='#documentation'>Skip to documentation</a>
+  <div class='ambient ambient-one' aria-hidden='true'></div>
+  <div class='ambient ambient-two' aria-hidden='true'></div>
+
+  <aside class='sidebar'>
+    <div class='brand-block'>
+      <div class='brand'>
+        <span class='brand-mark' aria-hidden='true'><span>F</span><i></i></span>
+        <span class='brand-name'>Forge<span>AI</span></span>
+      </div>
+      <p>AI control plane</p>
+    </div>
+    <nav aria-label='Primary navigation'>
+      <a href='index.html#gateway'><span class='nav-dot' aria-hidden='true'></span>Gateway</a>
+      <a href='index.html#usage'><span class='nav-dot' aria-hidden='true'></span>Ledger</a>
+      <a href='help.html'><span class='nav-dot' aria-hidden='true'></span>Help</a>
+      <a class='active' href='docs.html' aria-current='page'><span class='nav-dot' aria-hidden='true'></span>Docs</a>
+    </nav>
+    <button class='theme-toggle' id='theme-toggle' type='button' aria-label='Switch to light mode' aria-pressed='false'>
+      <span class='theme-icon' aria-hidden='true'>
+        <svg viewBox='0 0 24 24' focusable='false'><path d='M12 3v2m0 14v2M3 12h2m14 0h2M5.64 5.64l1.42 1.42m9.88 9.88 1.42 1.42M18.36 5.64l-1.42 1.42M7.06 16.94l-1.42 1.42'/><circle cx='12' cy='12' r='4'/></svg>
+      </span>
+      <span id='theme-label'>Light mode</span>
+    </button>
+    <div class='sidebar-note'><span>Reference edition</span><strong>README aligned</strong></div>
+    <div class='status'><i></i><span>Documentation ready</span></div>
+  </aside>
+
+  <main class='docs-main' id='documentation'>
+    <header class='hero docs-hero'>
+      <div class='hero-copy'>
+        <div class='eyebrow'><span></span>FORGEAI / DOCUMENTATION</div>
+        <h1>Build, verify, <span>operate.</span></h1>
+        <p>A practical reference for understanding the platform, running it locally, and evaluating its verified production boundaries.</p>
+        <div class='hero-points'><span>Architecture</span><span>Security</span><span>Operations</span><span>Evidence</span></div>
+      </div>
+      <div class='environment-card'><span class='environment'><i></i>LOCAL REFERENCE</span><small>Aligned with repository documentation</small></div>
+    </header>
+
+    <section class='workspace docs-workspace'>
+      <article class='panel documentation-panel'>
+        <div class='panel-header'>
+          <div><span class='section-kicker'>PROJECT REFERENCE</span><h2>Documentation hub</h2><p>Open each topic for focused implementation and verification guidance.</p></div>
+          <span class='docs-badge'>README ALIGNED</span>
+        </div>
+
+        <div class='docs-overview' aria-label='Documentation overview'>
+          <article><span>01</span><strong>3 core services</strong><small>Gateway · AutoPR · forge-eval</small></article>
+          <article><span>02</span><strong>BYOK boundary</strong><small>Request-scoped and never persisted</small></article>
+          <article><span>03</span><strong>Local proof</strong><small>Mock routing · ledger · limits</small></article>
+        </div>
+
+        <div class='docs-grid'>
+          <details class='doc-topic' open>
+            <summary><span class='doc-icon'>01</span><span><strong>Start locally</strong><small>Launch and verify the stack</small></span></summary>
+            <div class='doc-content'>
+              <ol><li>Copy <code>.env.example</code> to <code>.env</code> and set the local Compose secrets.</li><li>Run <code>docker compose up --build</code> from the repository root.</li><li>Confirm containers with <code>docker compose ps</code>, then open the dashboard on port 3000.</li></ol>
+              <div class='endpoint-list'>
+                <a href='http://localhost:8080/actuator/health' target='_blank' rel='noreferrer'><span>Gateway health</span><code>:8080</code></a>
+                <a href='http://localhost:8000/healthz' target='_blank' rel='noreferrer'><span>AutoPR health</span><code>:8000</code></a>
+                <a href='http://localhost:9090' target='_blank' rel='noreferrer'><span>Prometheus</span><code>:9090</code></a>
+              </div>
+            </div>
+          </details>
+
+          <details class='doc-topic' open>
+            <summary><span class='doc-icon'>02</span><span><strong>Architecture and request lifecycle</strong><small>From tenant request to durable usage</small></span></summary>
+            <div class='doc-content'><div class='flow-list'><span>Authenticate</span><i>→</i><span>Rate limit</span><i>→</i><span>Resolve BYOK</span><i>→</i><span>Route</span><i>→</i><span>Ledger</span></div><p>The Gateway owns tenant identity, request-scoped credentials, provider normalization, retries, mapped fallback, exact caching, cost attribution, and telemetry.</p></div>
+          </details>
+
+          <details class='doc-topic'>
+            <summary><span class='doc-icon'>03</span><span><strong>Service responsibilities</strong><small>Clear ownership across the platform</small></span></summary>
+            <div class='doc-content'><ul><li><strong>Gateway:</strong> normalized inference, BYOK, routing, cache, quota, and PostgreSQL usage ledger.</li><li><strong>AutoPR:</strong> signed GitHub webhook ingestion, deterministic risk signals, and Gateway-bound review generation.</li><li><strong>forge-eval:</strong> repeatable precision, recall, severity, and critical-miss quality gates.</li></ul></div>
+          </details>
+
+          <details class='doc-topic'>
+            <summary><span class='doc-icon'>04</span><span><strong>Security model</strong><small>Credential, tenant, and runtime boundaries</small></span></summary>
+            <div class='doc-content'><ul><li>Provider keys travel only in <code>X-Provider-Key</code> and remain request-scoped.</li><li>Prompts, provider keys, and PR diffs stay out of ledger metadata and metric labels.</li><li>Containers run non-root with read-only filesystems and <code>no-new-privileges</code>.</li><li>Public evidence includes immutable manifests, SPDX SBOMs, and Docker Scout results.</li></ul></div>
+          </details>
+
+          <details class='doc-topic'>
+            <summary><span class='doc-icon'>05</span><span><strong>Quality, delivery, and monitoring</strong><small>How changes move toward production</small></span></summary>
+            <div class='doc-content'><ul><li>Java and Python suites cover core endpoints, downstream failures, signatures, routing, and evaluation penalties.</li><li>Compose health checks gate service startup; Prometheus collects low-cardinality application metrics.</li><li>CI definitions validate tests, linting, Compose configuration, filesystem security, image builds, SBOMs, and provenance.</li></ul></div>
+          </details>
+
+          <details class='doc-topic'>
+            <summary><span class='doc-icon'>06</span><span><strong>Verified scope and limitations</strong><small>Honest evidence boundaries</small></span></summary>
+            <div class='doc-content'><ul><li>Locally proven: mock routing, BYOK attribution, cache isolation, tenant rate limiting, ledger writes, AutoPR simulation, and deterministic evaluation.</li><li>Still external: commercial provider calls, live GitHub comment posting, hosted CI execution, cloud deployment, and production SLO calibration.</li><li>Use <code>README.md</code> and the repository <code>docs</code> directory for diagrams, ADRs, runbooks, and detailed commands.</li></ul></div>
+          </details>
+        </div>
+
+        <div class='docs-footer'><div><strong>Ready to exercise the platform?</strong><span>Return to the control plane and follow the guided local mock workflow.</span></div><div class='docs-actions'><a href='index.html#gateway'>Request lab</a><a href='index.html#usage'>Usage ledger</a></div></div>
+      </article>
+    </section>
+    <footer><span>ForgeAI documentation</span><i></i>Practical guidance with explicit verification boundaries</footer>
+  </main>
+  <script src='theme.js'></script>
+</body>
+</html>

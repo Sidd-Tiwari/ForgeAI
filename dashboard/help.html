@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <meta name='description' content='ForgeAI local verification Help Center'>
+  <meta name='theme-color' content='#080b14'>
+  <title>ForgeAI - Help Center</title>
+  <link rel='stylesheet' href='styles.css'>
+</head>
+<body class='help-page'>
+  <a class='skip-link' href='#help-center'>Skip to Help Center</a>
+  <div class='ambient ambient-one' aria-hidden='true'></div>
+  <div class='ambient ambient-two' aria-hidden='true'></div>
+
+  <aside class='sidebar'>
+    <div class='brand-block'>
+      <div class='brand'>
+        <span class='brand-mark' aria-hidden='true'><span>F</span><i></i></span>
+        <span class='brand-name'>Forge<span>AI</span></span>
+      </div>
+      <p>AI control plane</p>
+    </div>
+    <nav aria-label='Primary navigation'>
+      <a href='index.html#gateway'><span class='nav-dot' aria-hidden='true'></span>Gateway</a>
+      <a href='index.html#usage'><span class='nav-dot' aria-hidden='true'></span>Ledger</a>
+      <a class='active' href='help.html' aria-current='page'><span class='nav-dot' aria-hidden='true'></span>Help</a>
+      <a href='docs.html'><span class='nav-dot' aria-hidden='true'></span>Docs</a>
+    </nav>
+    <button class='theme-toggle' id='theme-toggle' type='button' aria-label='Switch to light mode' aria-pressed='false'>
+      <span class='theme-icon' aria-hidden='true'>
+        <svg viewBox='0 0 24 24' focusable='false'><path d='M12 3v2m0 14v2M3 12h2m14 0h2M5.64 5.64l1.42 1.42m9.88 9.88 1.42 1.42M18.36 5.64l-1.42 1.42M7.06 16.94l-1.42 1.42'/><circle cx='12' cy='12' r='4'/></svg>
+      </span>
+      <span id='theme-label'>Light mode</span>
+    </button>
+    <div class='sidebar-note'><span>Guided support</span><strong>Local verification</strong></div>
+    <div class='status'><i></i><span>Help Center ready</span></div>
+  </aside>
+
+  <main class='help-main' id='help-center'>
+    <header class='hero help-hero'>
+      <div class='hero-copy'>
+        <div class='eyebrow'><span></span>FORGEAI / HELP CENTER</div>
+        <h1>Your first successful <span>request.</span></h1>
+        <p>Follow the guided local workflow, understand every handled state, and recover quickly when something does not look right.</p>
+        <div class='hero-points'><span>First-run guide</span><span>Error recovery</span><span>Credential safety</span></div>
+      </div>
+      <div class='environment-card'><span class='environment'><i></i>SAFE / LOCAL</span><small>No commercial provider key required</small></div>
+    </header>
+
+    <section class='workspace help-workspace'>
+      <article class='panel help-page-panel'>
+        <div class='panel-header'><div><span class='section-kicker'>QUICK START</span><h2>Complete a mock request</h2><p>Four steps from an empty dashboard to an attributed ledger row.</p></div><span class='help-badge'>NO LIVE KEYS</span></div>
+        <ol class='guide-grid'>
+          <li class='guide-step'><span class='step-number'>01</span><div><strong>Add the local token</strong><p>Copy the Gateway internal token from your local Compose environment and paste it into Local access token.</p></div></li>
+          <li class='guide-step'><span class='step-number'>02</span><div><strong>Choose a scenario</strong><p>Select a tenant, mock provider, model, mock key behavior, and ready-made prompt from the dropdowns.</p></div></li>
+          <li class='guide-step'><span class='step-number'>03</span><div><strong>Send the request</strong><p>Select Send mock request. The result area returns a normalized response or a clear handled error.</p></div></li>
+          <li class='guide-step'><span class='step-number'>04</span><div><strong>Inspect the ledger</strong><p>Confirm provider, model, cache use, credential source, status, and latency for the selected tenant.</p></div></li>
+        </ol>
+        <div class='help-actions'><div class='help-callout'><span aria-hidden='true'>✓</span><div><strong>Expected first result</strong><p>The response uses a mock model and the first ledger row reports <code>REQUEST_BYOK</code>.</p></div></div><a class='start-link' href='index.html#gateway'>Start guided request <span aria-hidden='true'>→</span></a></div>
+      </article>
+
+      <article class='panel support-panel'>
+        <div class='panel-header'><div><span class='section-kicker'>HANDLED STATES</span><h2>Understand what the UI is telling you</h2><p>Each failure stays actionable and avoids raw stack traces.</p></div></div>
+        <div class='support-grid'>
+          <article class='support-card'><span class='support-code'>VALIDATION</span><strong>Request not sent</strong><p>A required field is empty. Complete the highlighted field; the request never leaves the browser.</p></article>
+          <article class='support-card'><span class='support-code'>401</span><strong>Local token rejected</strong><p>Refresh the local Gateway token from Compose and confirm no leading or trailing whitespace was copied.</p></article>
+          <article class='support-card'><span class='support-code'>PROVIDER</span><strong>Mock key rejected</strong><p>Choose the valid mock key scenario for success, or keep the rejected option when demonstrating failure handling.</p></article>
+          <article class='support-card'><span class='support-code'>429</span><strong>Rate limit reached</strong><p>Wait one minute or select another tenant. The dashboard remains usable and existing ledger rows stay visible.</p></article>
+        </div>
+      </article>
+
+      <article class='panel help-faq-panel'>
+        <div class='panel-header'><div><span class='section-kicker'>TROUBLESHOOTING</span><h2>Quick answers</h2><p>Focused checks for the most common local questions.</p></div></div>
+        <div class='help-faq-grid'>
+          <details class='doc-topic' open><summary><span class='doc-icon'>01</span><span><strong>The dashboard says Gateway unavailable</strong><small>Check local service health</small></span></summary><div class='doc-content'><p>Run <code>docker compose ps</code> and confirm Gateway, PostgreSQL, and Redis are healthy. Then open the Gateway health endpoint on port 8080.</p></div></details>
+          <details class='doc-topic'><summary><span class='doc-icon'>02</span><span><strong>Why does the second request say CACHE?</strong><small>Tenant-private exact caching</small></span></summary><div class='doc-content'><p>An identical successful request for the same tenant is returned from the local exact cache. Change the prompt or tenant to create a cache miss.</p></div></details>
+          <details class='doc-topic'><summary><span class='doc-icon'>03</span><span><strong>Are provider credentials stored?</strong><small>Request-scoped BYOK boundary</small></span></summary><div class='doc-content'><p>No. The provider key stays in browser memory for the request, travels in <code>X-Provider-Key</code>, and is not written to the usage ledger.</p></div></details>
+          <details class='doc-topic'><summary><span class='doc-icon'>04</span><span><strong>Where is the complete architecture?</strong><small>Long-form project reference</small></span></summary><div class='doc-content'><p>Open the Docs page for service ownership, request flow, security, delivery, monitoring, verified scope, and repository documentation paths.</p></div></details>
+        </div>
+        <div class='docs-footer'><div><strong>Need deeper implementation context?</strong><span>The dedicated Docs page continues from guided usage into architecture and operations.</span></div><div class='docs-actions'><a href='index.html#gateway'>Request lab</a><a href='docs.html'>Open Docs</a></div></div>
+      </article>
+    </section>
+    <footer><span>ForgeAI Help Center</span><i></i>Safe guidance for the local verification workflow</footer>
+  </main>
+  <script src='theme.js'></script>
+</body>
+</html>
