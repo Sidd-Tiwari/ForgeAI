@@ -1,0 +1,1546 @@
+PROJECT
+local-verification-internal-token-32bytes
+|-GitHub token demo
+
+
+ForgeAI — AI Engineering Platform
+
+Act as a Principal Software Architect, Senior Backend Engineer, Distributed Systems Engineer, AI Infrastructure Engineer, Agent Systems Engineer, and R&D Engineer.
+
+Design and guide the implementation of a portfolio-grade platform called:
+
+ForgeAI
+
+An AI engineering platform for reliable LLM orchestration, autonomous code review, and continuous AI evaluation.
+
+ForgeAI combines three systems into one coherent platform:
+
+LLM Gateway
+     ↓
+AutoPR
+     ↓
+Evaluation Framework
+
+
+The three components must remain independently understandable, but they should share a common platform architecture.
+
+The project should demonstrate:
+
+Backend engineering
+Distributed systems
+Multi-provider LLM orchestration
+BYOK multi-tenancy
+Resilience
+Caching
+Cost/usage tracking
+Agentic workflows
+GitHub automation
+MCP/tool use
+AI evaluation
+Prompt experimentation
+Observability
+Security
+Production-oriented engineering
+
+Do not optimize for the number of technologies.
+
+Optimize for a coherent, defensible engineering story.
+
+1. Platform Architecture
+
+Use this as the initial conceptual architecture:
+
+                         ┌─────────────────────────┐
+                         │     Eval Framework      │
+                         │                         │
+                         │ datasets                │
+                         │ scoring                 │
+                         │ LLM-as-judge            │
+                         │ regression testing      │
+                         │ prompt evaluation       │
+                         └────────────┬────────────┘
+                                      │
+                    ┌─────────────────┼─────────────────┐
+                    │                 │                 │
+                    ▼                 ▼                 ▼
+          ┌─────────────────┐ ┌───────────────┐ ┌───────────────┐
+          │   LLM Gateway   │ │    AutoPR     │ │   Dashboard   │
+          │                 │ │               │ │               │
+          │ Routing         │ │ GitHub Agent  │ │ Cost          │
+          │ BYOK            │ │ MCP/Tools     │ │ Usage         │
+          │ Resilience      │ │ Risk Scoring  │ │ Quality       │
+          │ Caching         │ │ Review        │ │ Routing       │
+          │ Ledger          │ │ Self-Eval     │ │ Metrics       │
+          │ Prompt Registry │ │               │ │               │
+          └────────┬────────┘ └───────┬───────┘ └───────────────┘
+                   │                  │
+                   │                  │
+           ┌───────┼─────────┐        │
+           ▼       ▼         ▼        ▼
+        Claude   OpenAI    Gemini   GitHub/MCP
+
+
+The LLM Gateway is the platform core.
+
+AutoPR must never directly call Claude, OpenAI, or Gemini.
+
+All LLM traffic must flow through the Gateway.
+
+2. Technology Stack
+Gateway
+
+Use:
+
+Java
+Spring Boot
+PostgreSQL
+Redis
+Resilience4j
+Micrometer
+Prometheus-compatible metrics
+Grafana Cloud
+Claude API
+OpenAI API
+Gemini API
+AutoPR
+
+Use:
+
+Python
+FastAPI
+GitHub Webhooks
+GitHub API
+MCP where genuinely useful
+ForgeAI Gateway API
+Evaluation Framework
+
+Use:
+
+Python
+Importable Python package
+CLI
+Optional service/API where justified
+Infrastructure
+
+Use:
+
+Docker
+Docker Compose
+Grafana Cloud Free Tier
+
+For deployment, prefer free/low-cost infrastructure where practical.
+
+3. BYOK — Bring Your Own Key
+
+BYOK is a first-class platform capability.
+
+The Gateway must support users/tenants providing their own provider credentials.
+
+The primary objective is:
+
+ForgeAI should support real multi-provider experimentation without forcing the platform owner to pay for every user's LLM usage.
+
+The architecture should distinguish between:
+
+Platform-owned provider credentials
+User-owned provider credentials
+
+4. BYOK Request Flow
+
+The conceptual flow is:
+
+User
+  |
+  | provides provider key
+  v
+ForgeAI UI/API
+  |
+  v
+Gateway
+  |
+  | identifies tenant/session
+  |
+  | resolves provider credential
+  |
+  v
+Routing Engine
+  |
+  +------ Claude
+  +------ OpenAI
+  +------ Gemini
+
+
+The Gateway is responsible for credential resolution.
+
+AutoPR does not manage provider API keys.
+
+5. BYOK Modes
+
+Support multiple modes.
+
+Mode A — Session-only
+
+Recommended for the public portfolio demo.
+
+User enters API key
+       ↓
+Key exists only for session/request lifecycle
+       ↓
+Gateway uses key
+       ↓
+Key discarded
+
+
+Advantages:
+
+Minimal security surface
+No credential database
+No long-term secret retention
+Easy to explain
+Good for public demos
+
+Disadvantage:
+
+User must provide the key again later.
+Mode B — Encrypted account credential
+
+Optional future capability.
+
+If accounts are introduced:
+
+User
+ ↓
+Encrypted provider credential
+ ↓
+PostgreSQL
+
+
+Requirements:
+
+Encryption at rest
+Key-management strategy
+Never log secrets
+Never expose plaintext keys
+Mask credentials in UI
+Rotation
+Revocation
+Access control
+Auditability
+
+Do not implement this merely for the sake of complexity.
+
+Mode C — Client-supplied credential
+
+Allow the frontend/client to send a provider credential for an individual request.
+
+For example, use a dedicated credential header or secure request mechanism rather than placing the provider key inside the normal LLM request payload.
+
+The Gateway should:
+
+Validate the request.
+Resolve the selected provider.
+Use the supplied credential for that call.
+Never persist the plaintext key.
+Never log it.
+Never return it.
+Clear it from request-scoped memory after use.
+6. BYOK Security Requirements
+
+Treat provider API keys as secrets.
+
+Never:
+
+log them
+store plaintext keys
+return them in API responses
+put them in metrics
+put them in exception messages
+store them in Redis as ordinary cache data
+store them in PostgreSQL plaintext
+
+
+Ensure logs cannot accidentally contain:
+
+Authorization headers
+X-Provider-Key
+provider SDK request objects
+HTTP client debugging output
+
+
+Use secret redaction.
+
+Discuss:
+
+Memory exposure
+TLS
+Reverse proxies
+Browser security
+XSS
+CSRF
+CORS
+Session handling
+Credential leakage
+SSRF
+Logging configuration
+7. Tenant Model
+
+Introduce a lightweight tenant abstraction.
+
+Example:
+
+Tenant
+ ├── API credentials
+ ├── usage
+ ├── rate limits
+ ├── requests
+ └── routing preferences
+
+
+A tenant can represent:
+
+anonymous demo user
+authenticated user
+AutoPR installation
+developer
+organization
+
+
+Every Gateway request should be associated with a tenant or anonymous session identity.
+
+8. Cost Ownership
+
+The Gateway must distinguish:
+
+platform-funded request
+vs
+BYOK request
+
+
+The ledger should record:
+
+tenant
+provider
+model
+token usage
+estimated cost
+credential ownership
+
+
+Example:
+
+{
+  "tenant": "demo-user-123",
+  "provider": "gemini",
+  "model": "gemini-model",
+  "inputTokens": 1200,
+  "outputTokens": 800,
+  "estimatedCost": 0.00,
+  "credentialSource": "BYOK"
+}
+
+
+The platform should be able to report:
+
+Platform LLM cost
+User-owned LLM usage
+Cost per tenant
+Cost per PR review
+Cost per provider
+Cost per model
+
+
+Important:
+
+BYOK means the platform does not necessarily incur the provider charge, but the Gateway should still calculate estimated usage/cost for observability.
+
+9. Free Demo Quota
+
+Optionally support a small platform-funded demo quota.
+
+Example:
+
+Unauthenticated user
+       ↓
+5 requests/day
+       ↓
+platform-owned provider key
+
+
+Requirements:
+
+Per-IP or anonymous-session rate limit
+Daily quota
+Maximum token budget
+Maximum request duration
+Provider restrictions
+Abuse protection
+
+Do not expose unrestricted platform-owned API credentials.
+
+The demo quota should be deliberately small.
+
+10. Rate Limiting
+
+Rate limits must exist even for BYOK.
+
+BYOK removes the platform's LLM provider cost, but does NOT remove:
+
+Gateway CPU
+Memory
+Redis usage
+Database usage
+Network bandwidth
+Abuse risk
+
+Implement rate limits by:
+
+tenant
+session
+IP
+provider
+model
+
+
+Where appropriate.
+
+Discuss distributed rate limiting with Redis.
+
+11. Provider Credential Resolution
+
+Design a credential resolver:
+
+CredentialResolver
+        |
+        +── Request credential
+        |
+        +── Tenant credential
+        |
+        +── Platform credential
+        |
+        +── No credential
+
+
+Example priority:
+
+1. Explicit BYOK credential
+2. Tenant stored credential
+3. Platform demo credential
+4. Reject request
+
+
+Make this configurable.
+
+The credential resolver must remain independent from provider adapters.
+
+12. LLM Gateway
+
+The Gateway remains the central platform service.
+
+Responsibilities:
+
+Unified LLM API
+Provider abstraction
+Credential resolution
+BYOK
+Routing
+Retry
+Fallback
+Circuit breakers
+Rate limiting
+Caching
+Prompt registry
+Usage ledger
+Cost accounting
+Provider health
+Observability
+13. Provider Abstraction
+
+Create a provider-neutral interface.
+
+Conceptually:
+
+interface LlmProvider {
+
+    LlmResponse generate(LlmRequest request);
+
+    ProviderCapabilities capabilities();
+
+    ProviderHealth health();
+}
+
+
+Evaluate whether this should instead support:
+
+asynchronous execution
+reactive execution
+streaming
+cancellation
+
+Do not leak provider-specific SDK types into the domain.
+
+Implement adapters for:
+
+Claude
+OpenAI
+Gemini
+
+
+Normalize:
+
+requests
+responses
+usage
+errors
+streaming events
+provider capabilities
+
+14. Routing Engine
+
+Support:
+
+EXPLICIT
+AUTO
+CHEAPEST
+FASTEST
+CAPABILITY
+FALLBACK
+
+
+The routing engine should consider:
+
+provider availability
+model capability
+latency
+cost
+historical reliability
+rate limits
+request requirements
+tenant configuration
+
+
+BYOK should not change the routing abstraction.
+
+For example:
+
+Tenant has:
+Claude key
+Gemini key
+
+AutoPR requests:
+AUTO
+
+
+The Gateway may route:
+
+Claude → Gemini fallback
+
+
+without AutoPR knowing how the credentials were supplied.
+
+15. Resilience
+
+Handle:
+
+Timeout
+HTTP 429
+HTTP 5xx
+Connection failures
+Invalid responses
+Provider outage
+Rate limits
+
+Use:
+
+Retry
+Exponential backoff
+Jitter
+Circuit breaker
+Bulkhead
+Provider fallback
+
+Do not retry indiscriminately.
+
+A BYOK request still needs safe retry semantics.
+
+Discuss:
+
+Duplicate requests
+Cost implications
+Streaming
+Provider rate limits
+Idempotency
+16. Semantic Caching
+
+The Gateway should eventually support:
+
+exact cache
+semantic cache
+
+
+Potential cache key inputs:
+
+prompt
+system prompt
+model
+prompt version
+parameters
+tool configuration
+provider
+tenant
+
+
+Explicitly determine whether provider identity should be part of the cache key.
+
+For BYOK, consider whether cached responses generated using one user's credentials may ever be returned to another tenant.
+
+Default answer:
+
+Never share tenant-private cached results across tenants unless the cache is explicitly designed for safe public/shared responses.
+
+This is a critical multi-tenant security requirement.
+
+17. Usage Ledger
+
+Record:
+
+request_id
+tenant_id
+application
+provider
+model
+credential_source
+prompt_version
+input_tokens
+output_tokens
+total_tokens
+estimated_cost
+latency
+cache_hit
+fallback_used
+status
+timestamp
+
+
+AutoPR should be able to show:
+
+PR #123
+Review cost
+Provider
+Model
+Tokens
+Latency
+Fallback
+
+
+without having access to provider credentials.
+
+18. Prompt Registry
+
+The Gateway should own reusable prompt versions.
+
+Example:
+
+autopr-review
+    v1
+    v2
+    v3
+
+
+States:
+
+DRAFT
+ACTIVE
+EXPERIMENT
+DEPRECATED
+
+
+AutoPR requests:
+
+promptId = autopr-review
+
+
+rather than hardcoding every production prompt inside the agent.
+
+19. Prompt A/B Testing
+
+Allow controlled experiments:
+
+90% → prompt v1
+10% → prompt v2
+
+
+Evaluation Framework measures:
+
+review quality
+precision
+recall
+false positives
+severity accuracy
+
+
+Do not automatically promote a prompt solely from one LLM-judge score.
+
+Discuss:
+
+Evaluation-set quality
+Statistical significance
+Regression detection
+Sample size
+Judge bias
+20. AutoPR
+
+AutoPR is the first major application built on ForgeAI.
+
+Flow:
+
+GitHub PR
+    ↓
+Webhook
+    ↓
+AutoPR
+    ↓
+Fetch diff
+    ↓
+Inspect repository
+    ↓
+Use tools/MCP
+    ↓
+Gateway
+    ↓
+LLM
+    ↓
+Review
+    ↓
+Risk score
+    ↓
+GitHub
+    ↓
+Evaluation
+
+
+All model interaction must go through Gateway.
+
+21. Agentic Review
+
+AutoPR should not be merely:
+
+diff → prompt → answer
+
+
+Instead investigate an agent loop:
+
+Planner
+   ↓
+Inspect diff
+   ↓
+Inspect relevant code
+   ↓
+Inspect tests
+   ↓
+Inspect dependencies
+   ↓
+Analyze
+   ↓
+Review
+
+
+Use MCP/tool calls only when they provide real value.
+
+22. Risk Scoring
+
+Generate structured risk:
+
+{
+  "riskScore": 8.2,
+  "riskLevel": "HIGH",
+  "categories": {
+    "security": 8,
+    "correctness": 9,
+    "performance": 6,
+    "testing": 9
+  }
+}
+
+
+Combine:
+
+LLM reasoning
++
+deterministic repository signals
++
+evaluation rules
+
+
+Avoid unexplained arbitrary numerical outputs.
+
+23. Evaluation Framework
+
+Build the evaluation system as an importable Python package.
+
+Example:
+
+eval-framework/
+├── forge_eval/
+│   ├── datasets/
+│   ├── evaluators/
+│   ├── judges/
+│   ├── metrics/
+│   ├── runners/
+│   ├── reports/
+│   └── cli/
+├── tests/
+└── pyproject.toml
+
+
+It should support:
+
+from forge_eval import evaluate
+
+
+and:
+
+forge-eval run dataset.json
+
+24. AutoPR Self-Evaluation
+
+After AutoPR creates a review:
+
+AutoPR Review
+      ↓
+Evaluation Framework
+      ↓
+Quality Score
+
+
+Measure:
+
+finding precision
+finding recall
+severity accuracy
+false positives
+critical misses
+explanation quality
+overall review quality
+
+
+Example:
+
+{
+  "reviewQualityScore": 0.91,
+  "precision": 0.89,
+  "recall": 0.94,
+  "criticalMisses": 0
+}
+
+
+Treat this as an evaluation signal, not objective truth.
+
+Discuss evaluator reliability and judge bias.
+
+25. Recursive CI Evaluation
+
+ForgeAI should evaluate changes to ForgeAI itself.
+
+Example:
+
+Developer changes AutoPR prompt
+        ↓
+Pull Request
+        ↓
+CI
+        ↓
+Evaluation Framework
+        ↓
+Benchmark dataset
+        ↓
+Quality gate
+        ↓
+PASS / FAIL
+
+
+This gives the project a strong R&D story:
+
+The platform continuously tests the quality of its own AI behavior.
+
+26. Dashboard
+
+Build one unified dashboard.
+
+Gateway
+
+Show:
+
+Requests
+Latency
+Errors
+Provider distribution
+Fallback rate
+Cache hit rate
+BYOK
+
+Show:
+
+BYOK requests
+Platform-funded requests
+Usage by tenant
+Requests by provider
+Credential source
+
+Never display credentials.
+
+Cost
+
+Show:
+
+Estimated cost
+Cost per PR
+Cost per provider
+Cost per model
+Platform-funded cost
+BYOK estimated cost
+AutoPR
+
+Show:
+
+PRs reviewed
+Review latency
+Findings
+Risk distribution
+Review quality
+Evaluation
+
+Show:
+
+Prompt version scores
+Quality trends
+Regression failures
+Precision
+Recall
+False-positive rate
+
+Use Grafana Cloud rather than self-hosting Grafana.
+
+27. Observability
+
+Use:
+
+Spring Boot Actuator
+Micrometer
+Prometheus-compatible metrics
+Grafana Cloud
+Structured logging
+Correlation IDs
+
+
+Metrics:
+
+gateway_requests_total
+gateway_request_duration_seconds
+gateway_provider_requests_total
+gateway_provider_failures_total
+gateway_fallback_total
+gateway_cache_hits_total
+gateway_cache_misses_total
+gateway_tokens_total
+gateway_estimated_cost_total
+gateway_byok_requests_total
+
+autopr_reviews_total
+autopr_review_duration_seconds
+autopr_risk_score
+autopr_quality_score
+
+eval_runs_total
+eval_score
+eval_regressions_total
+
+
+Avoid high-cardinality labels.
+
+Never expose:
+
+API keys
+prompts
+PR diffs
+request bodies
+raw credentials
+
+
+through metrics.
+
+28. Database
+
+Use PostgreSQL for durable state.
+
+Core entities:
+
+tenant
+api_key
+provider
+model
+prompt
+prompt_version
+routing_policy
+llm_request
+llm_usage
+llm_cost
+autopr_review
+evaluation_run
+evaluation_result
+
+
+For stored BYOK credentials, use encrypted storage only if persistent credentials are actually implemented.
+
+Session-only BYOK should not require credential persistence.
+
+29. Redis
+
+Use Redis for:
+
+rate limiting
+cache
+short-lived provider health
+temporary state
+
+
+Do not use Redis as the authoritative usage ledger.
+
+Do not casually persist BYOK secrets in Redis.
+
+30. Security Model
+
+Design for:
+
+API key authentication
+BYOK credential isolation
+GitHub webhook signature verification
+Tenant isolation
+Secret redaction
+Rate limiting
+Request validation
+CORS
+CSRF where applicable
+TLS
+Least privilege
+Audit logging
+
+Consider attacks such as:
+
+credential leakage
+prompt injection
+abuse of demo quota
+cross-tenant cache poisoning
+cross-tenant data leakage
+malicious GitHub repositories
+SSRF through tools
+
+31. Local Development
+
+Use:
+
+docker-compose.yml
+
+
+with:
+
+gateway
+autopr
+postgres
+redis
+
+
+Do not require local Grafana/Prometheus containers unless useful for development.
+
+Environment variables:
+
+OPENAI_API_KEY
+ANTHROPIC_API_KEY
+GEMINI_API_KEY
+
+DATABASE_URL
+REDIS_URL
+
+GRAFANA_CLOUD_URL
+GRAFANA_CLOUD_TOKEN
+
+
+Platform-owned provider keys should be optional.
+
+The system must still work in BYOK-only mode.
+
+32. Deployment Strategy
+
+Optimize for portfolio/demo cost.
+
+Evaluate:
+
+Spring Boot hosting
+Python service hosting
+Managed PostgreSQL
+Managed Redis
+Grafana Cloud
+
+
+Possible free/low-cost services can be considered, but do not hard-code the architecture around a particular vendor.
+
+The primary goal is:
+
+Zero or near-zero platform LLM cost through BYOK, with strict limits on any platform-funded demo quota.
+
+33. Testing
+
+Implement:
+
+Gateway unit tests
+Routing
+Credential resolution
+Pricing
+Retry classification
+Cache keys
+Validation
+Integration tests
+
+Use Testcontainers for:
+
+PostgreSQL
+Redis
+Provider contract tests
+
+Mock provider responses and failures.
+
+BYOK security tests
+
+Verify:
+
+credential never logged
+credential never persisted accidentally
+credential never returned
+tenant A cannot use tenant B credential
+tenant A cannot read tenant B cached response
+
+Resilience tests
+
+Simulate:
+
+429
+500
+timeout
+connection reset
+provider outage
+
+AutoPR tests
+
+Test:
+
+webhook handling
+diff extraction
+agent flow
+review generation
+GitHub posting
+
+Evaluation tests
+
+Test:
+
+dataset loading
+scoring
+regression detection
+quality gates
+
+34. Load Testing
+
+Use k6 or Gatling.
+
+Test:
+
+concurrent Gateway requests
+rate limiting
+Redis contention
+PostgreSQL writes
+provider latency
+fallback behavior
+cache hit rates
+BYOK traffic
+
+
+Identify:
+
+What becomes the first bottleneck at 10x traffic?
+
+Then explain what architectural change would address it.
+
+35. Development Roadmap
+Phase 1 — Gateway v1
+
+Implement only:
+
+Spring Boot
+PostgreSQL
+Redis
+Claude
+OpenAI
+Gemini
+Provider abstraction
+Basic routing
+BYOK
+Usage ledger
+Basic metrics
+
+
+Skip advanced semantic caching initially.
+
+Phase 2 — Evaluation Framework
+
+Build:
+
+Python package
+datasets
+evaluators
+metrics
+LLM judge
+CLI
+reports
+
+
+Make it reusable from day one.
+
+Phase 3 — AutoPR
+
+Implement:
+
+GitHub webhook
+PR ingestion
+diff retrieval
+Gateway integration
+review generation
+risk scoring
+GitHub review posting
+
+
+No direct provider calls.
+
+Phase 4 — Platform Integration
+
+Add:
+
+AutoPR → Gateway
+AutoPR → Evaluation Framework
+Gateway → Evaluation Framework
+
+
+Expose:
+
+cost per PR
+provider used
+fallback used
+review quality
+
+Phase 5 — Gateway Advanced Features
+
+Add:
+
+semantic caching
+circuit breakers
+advanced rate limiting
+provider health scoring
+prompt registry
+prompt versioning
+
+Phase 6 — Prompt Experiments
+
+Add:
+
+A/B testing
+evaluation-based promotion
+regression detection
+
+Phase 7 — R&D
+
+Investigate:
+
+adaptive routing
+semantic caching
+quality/cost optimization
+agent trajectory evaluation
+model selection
+
+
+Only implement experiments that produce measurable results.
+
+36. R&D Experiments
+
+Run real experiments.
+
+Experiment 1 — Provider Routing
+
+Compare:
+
+static routing
+cost-aware routing
+latency-aware routing
+quality-aware routing
+
+
+Measure:
+
+quality
+latency
+cost
+failure rate
+
+Experiment 2 — BYOK vs Platform Credentials
+
+Measure:
+
+platform LLM expenditure
+tenant usage
+request volume
+
+
+Demonstrate the zero/low-marginal-cost model.
+
+Experiment 3 — Semantic Cache
+
+Measure:
+
+cache hit rate
+latency reduction
+cost reduction
+false matches
+quality degradation
+
+Experiment 4 — Prompt Versions
+
+Compare:
+
+review_prompt_v1
+review_prompt_v2
+
+
+using the Evaluation Framework.
+
+Experiment 5 — Agent vs Single-Pass
+
+Compare:
+
+single LLM review
+vs
+tool-using AutoPR agent
+
+
+Measure whether additional agent complexity improves review quality.
+
+37. Architecture Trade-offs
+
+For every major decision, document:
+
+Decision
+Rationale
+Alternatives
+Trade-offs
+Failure Modes
+Scaling Implications
+Security Implications
+When To Revisit
+
+
+Especially analyze:
+
+BYOK session-only vs encrypted persistence
+Redis vs local cache
+exact cache vs semantic cache
+synchronous vs asynchronous ledger
+REST vs streaming
+SSE vs WebSocket
+Spring MVC vs WebFlux
+Kafka vs no Kafka
+LLM-as-judge vs deterministic evaluation
+MCP vs direct GitHub APIs
+monorepo vs multi-repo
+
+
+Do not add Kafka, Kubernetes, vector databases, or service meshes unless a real requirement justifies them.
+
+38. Repository Structure
+
+Use a monorepo:
+
+forge-ai/
+│
+├── gateway/
+│   ├── src/
+│   ├── pom.xml
+│   └── Dockerfile
+│
+├── autopr/
+│   ├── forge_autopr/
+│   ├── tests/
+│   ├── pyproject.toml
+│   └── Dockerfile
+│
+├── eval-framework/
+│   ├── forge_eval/
+│   ├── tests/
+│   ├── datasets/
+│   └── pyproject.toml
+│
+├── dashboard/
+│
+├── docs/
+│   ├── architecture/
+│   ├── adr/
+│   └── research/
+│
+├── docker-compose.yml
+├── .env.example
+├── Makefile
+└── README.md
+
+39. Required ADRs
+
+Create ADRs for:
+
+ADR-001 Gateway provider abstraction
+ADR-002 BYOK credential strategy
+ADR-003 Multi-tenant model
+ADR-004 Redis caching strategy
+ADR-005 Usage ledger
+ADR-006 Provider routing
+ADR-007 Prompt registry
+ADR-008 AutoPR architecture
+ADR-009 MCP integration
+ADR-010 Evaluation methodology
+ADR-011 LLM-as-judge
+ADR-012 Grafana Cloud observability
+
+40. Final Architecture Review
+
+Before implementation, challenge the design.
+
+Identify:
+
+Security risks
+BYOK credential risks
+Cross-tenant data risks
+Cache poisoning risks
+Provider dependency risks
+Evaluation bias
+Cost risks
+Operational complexity
+Scaling bottlenecks
+Over-engineering
+
+Clearly separate:
+
+MVP
+Production-oriented
+Advanced
+R&D
+
+
+Do not claim production readiness simply because the system has Docker, Redis, PostgreSQL, and monitoring.
+
+41. Required Deliverables
+
+Produce:
+
+Executive architecture
+C4 architecture diagrams
+Component architecture
+Request lifecycle
+BYOK lifecycle
+Credential-resolution flow
+Tenant model
+Database schema
+Redis design
+Provider abstraction
+Routing engine
+Resilience architecture
+Cache architecture
+Prompt registry
+AutoPR architecture
+MCP/tool architecture
+Evaluation framework
+Evaluation dataset design
+Evaluation scoring model
+Self-evaluation flow
+CI quality gate
+Observability architecture
+Grafana dashboard
+Security model
+BYOK threat model
+Testing strategy
+Load-testing strategy
+Docker Compose
+Deployment architecture
+R&D experiments
+ADR list
+Implementation roadmap
+Interview talking points
+Resume description
+
+For each significant architectural decision provide:
+
+Decision
+Why
+Alternatives
+Trade-offs
+Failure modes
+Security implications
+Scaling implications
+When to revisit
+
+Final Engineering Narrative
+
+The finished project should allow an interviewer to follow a request end-to-end:
+
+User / GitHub PR
+       ↓
+     AutoPR
+       ↓
+ ForgeAI Gateway
+       ↓
+Tenant / BYOK resolution
+       ↓
+Routing decision
+       ↓
+Cache / rate limit / resilience
+       ↓
+Claude / OpenAI / Gemini
+       ↓
+Normalized response
+       ↓
+Usage + cost ledger
+       ↓
+AutoPR review
+       ↓
+Evaluation Framework
+       ↓
+Quality score
+       ↓
+Grafana dashboard
+
+
+And answer:
+
+Who paid for this request?
+
+Which provider handled it?
+
+Why was that provider selected?
+
+Did fallback happen?
+
+Was the response cached?
+
+How much did it cost?
+
+Was the review actually good?
+
+How do we know the new prompt is better?
+
+Can another tenant see this user's credentials or cached response?
+
+The final platform should demonstrate:
+
+I didn't just build an AI application. I built the infrastructure around AI applications — with multi-provider orchestration, BYOK economics, resilient execution, observable usage, autonomous software engineering, and continuous evaluation of AI quality.
